@@ -25,11 +25,8 @@ then
     cp -r ../yellow/ yellow/
     cp -r ../green/ green/
     cp -r ../editor/ editor/
-    mkdir node_modules
-    cp -r ../node_modules/phosph* node_modules/
-    cp -r ../node_modules/steal node_modules/
-    cp -r ../node_modules/codemirror node_modules/
     cp -r ../theme/ theme/
+    npm install --production
 
     git add -A
     git commit -m "autocommit docs"
