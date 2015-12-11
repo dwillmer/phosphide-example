@@ -1,0 +1,47 @@
+{
+  "name": "phosphide-example",
+  "version": "0.0.2",
+  "description": "An example Phosphide plugin application.",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "dependencies": {
+    "codemirror": "^5.9.0",
+    "phosphide": "file:../phosphide",
+    "phosphor-di": "0.0.2",
+    "phosphor-messaging": "^1.0.5",
+    "phosphor-widget": "^1.0.0-beta"
+  },
+  "devDependencies": {
+    "rimraf": "^2.4.4",
+    "steal": "^0.12.7",
+    "typescript": "^1.6.2"
+  },
+  "scripts": {
+    "clean": "rimraf blue/*.js && rimraf green/*.js && rimraf red/*.js && rimraf yellow/*.js && rimraf editor/*.js",
+    "build": "tsc --project blue && tsc --project green && tsc --project red && tsc --project yellow && tsc --project editor",
+    "postinstall": "npm dedupe"
+  },
+  "system": {
+    "npmIgnore": ["devDependencies"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phosphorjs/phosphide-example.git"
+  },
+  "files": [
+    "lib/*.css",
+    "lib/*.d.ts",
+    "lib/*.js"
+  ],
+  "keywords": [
+    "application",
+    "ide",
+    "plugin"
+  ],
+  "author": "S. Chris Colbert <sccolbert@gmail.com>",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/phosphorjs/phosphide-example/issues"
+  },
+  "homepage": "https://github.com/phosphorjs/phosphide-example"
+}
