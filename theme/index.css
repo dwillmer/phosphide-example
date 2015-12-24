@@ -72,30 +72,30 @@ body {
 }
 
 
-.p-SideBarButton {
+.p-SideBar-button {
   padding: 0 18px;
   line-height: 35px;
   box-sizing: border-box;
 }
 
 
-.p-SideBarButton:hover:not(.p-mod-current) {
+.p-SideBar-button:hover:not(.p-mod-current) {
   background: white;
 }
 
 
-.p-SideBarButton.p-mod-current {
+.p-SideBar-button.p-mod-current {
   background: white;
   min-height: 36px;
 }
 
 
-.p-SideBar.p-mod-left > .p-SideBar-content > .p-SideBarButton {
+.p-SideBar.p-mod-left > .p-SideBar-content > .p-SideBar-button {
   border-left: 1px solid #C0C0C0;
 }
 
 
-.p-SideBar.p-mod-right > .p-SideBar-content > .p-SideBarButton {
+.p-SideBar.p-mod-right > .p-SideBar-content > .p-SideBar-button {
   border-right: 1px solid #C0C0C0;
 }
 
@@ -163,17 +163,17 @@ body {
 }
 
 
-.p-DockPanelOverlay {
+.p-DockPanel-overlay {
   background: rgba(236, 110, 47, 0.1);
   border: 1px dashed #EC6E2F;
 }
 
 
-.p-DockPanelOverlay.p-mod-root-top,
-.p-DockPanelOverlay.p-mod-root-left,
-.p-DockPanelOverlay.p-mod-root-right,
-.p-DockPanelOverlay.p-mod-root-bottom,
-.p-DockPanelOverlay.p-mod-root-center {
+.p-DockPanel-overlay.p-mod-root-top,
+.p-DockPanel-overlay.p-mod-root-left,
+.p-DockPanel-overlay.p-mod-root-right,
+.p-DockPanel-overlay.p-mod-root-bottom,
+.p-DockPanel-overlay.p-mod-root-center {
   border-width: 2px;
 }
 
@@ -211,7 +211,7 @@ body {
 }
 
 
-.p-Tab {
+.p-TabBar-tab {
   flex-basis: 125px;
   min-width: 35px;
   margin-left: -1px;
@@ -226,12 +226,12 @@ body {
 }
 
 
-.p-Tab.p-mod-first {
+.p-TabBar-tab.p-mod-first {
   margin-left: 0px;
 }
 
 
-.p-Tab.p-mod-current {
+.p-TabBar-tab.p-mod-current {
   border-top: 2px solid #EC6E2F;
   background: white;
   min-height: 24px;
@@ -239,30 +239,30 @@ body {
 }
 
 
-.p-Tab:hover:not(.p-mod-current) {
+.p-TabBar-tab:hover:not(.p-mod-current) {
   background: #F0F0F0;
 }
 
 
-.p-Tab-icon,
-.p-Tab-text,
-.p-Tab-close {
+.p-TabBar-tab-icon,
+.p-TabBar-tab-text,
+.p-TabBar-tab-close {
   line-height: 23px;
 }
 
 
-.p-Tab.p-mod-closable > .p-Tab-close {
+.p-TabBar-tab.p-mod-closable > .p-Tab-close {
   margin-left: 4px;
 }
 
 
-.p-Tab.p-mod-closable > .p-Tab-close:before {
+.p-TabBar-tab.p-mod-closable > .p-Tab-close:before {
   content: '\f00d';
   font-family: FontAwesome;
 }
 
 
-.p-Tab.p-mod-drag-image {
+.p-TabBar-tab.p-mod-drag-image {
   min-height: 24px;
   min-width: 125px;
   border: none;
@@ -278,6 +278,6 @@ body {
 
 .editor-CodeMirrorWidget {
   border: 1px solid #C0C0C0;
-  min-width: 100px;
-  min-height: 100px;
+  min-width: 300px;
+  min-height: 300px;
 }
