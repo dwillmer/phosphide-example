@@ -1,15 +1,16 @@
 language: node_js
 node_js:
-  - '0.12'
+- '0.12'
 sudo: false
 env:
   matrix:
-    - GROUP=
+  - GROUP=
   global:
-    - GHREPO=github.com/phosphorjs/phosphide-example
+  - GHREPO=github.com/phosphorjs/phosphide-example
+  - secure: WIeaCkswdMOGIemmQSoAwGtfeuYuqKseiIzJIai319PJgbw3LJTCo99YJ/r3D8+6zjl78Z9iZ/IUKlib1FYboOHwCScakvixd1GwuW33ogW2uhEkCIOyw3TuW6wScVk6b0emTrVdCmz4/hhA32C6UcQhO+2yv2s1dbofwL4iSHGgzHeCQ+KIPr1KqLZFfNmARHTPCIIzjxcq2TnWS6X/Huo7sAxdRLch5KsWCLBQOuIUaQp3Oi3I7je9aXJUqI+9wzippbkjfIARxXT4Opiv5gKya59TCQ9ZYmdfawdseclbHIh3vbkmdlnYBgTb5maOUY/Ht2mCVmkAidWK/tfDnRxoJy9qaO9GjMH2H62OU9Xa9XG3MYTafzzYdbolnUOBsn/kIkmf4ktSmLvRyELz3N0ARoWD+o7vCSas3GoS3o9XTckCp3fRaXd7g6ST8C0DngwtSAgqgzERMcQHoESdks3le8pbgMb4NceqmhfoVlVRkZrc2lkXzmY7wocyWALtJ4Lo66eq5+lJP8BHNnYJnLZ4pkPJrlJTIw7TgqnxCOmkc0LmUK5ULMZIUfM5vdZYOZncCH2pxaO3pdxjWCe/vy1wpZbQdErj0SI+NqJSo4tNELOK8g/YuXV+ZslUKPxm1wj2LgyuHj3LiCHF9ryJ1+EA0a0l2HqFhIJfpUDG8y0=
 install:
-  - bash ./scripts/travis_install.sh
+- bash ./scripts/travis_install.sh
 script:
-  - bash ./scripts/travis_script.sh
+- bash ./scripts/travis_script.sh
 after_success:
-  - bash ./scripts/travis_after_success.sh
+- bash ./scripts/travis_after_success.sh
