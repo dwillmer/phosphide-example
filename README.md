@@ -36,6 +36,14 @@ npm run clean
 npm run build
 ```
 
+Run the Demo
+------------
+
+Follow the source build instructions first.
+
+```bash
+npm run serve
+```
 
 Supported Runtimes
 ------------------
