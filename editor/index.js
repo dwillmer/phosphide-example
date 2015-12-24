@@ -17,20 +17,24 @@ var phosphor_widget_1 = require('phosphor-widget');
 require('codemirror/lib/codemirror.css');
 require('codemirror/mode/javascript/javascript.js');
 function resolve(container) {
-    return container.resolve(EditorFactory);
+    return container.resolve(EditorHandler).then(function (handler) { handler.run(); });
 }
 exports.resolve = resolve;
-var EditorFactory = (function () {
-    function EditorFactory() {
+var EditorHandler = (function () {
+    function EditorHandler(shell) {
+        this._shell = shell;
     }
-    EditorFactory.create = function (shell) {
+    EditorHandler.create = function (shell) {
+        return new EditorHandler(shell);
+    };
+    EditorHandler.prototype.run = function () {
         for (var i = 0; i < 5; ++i) {
             var editor = createEditor(i);
-            shell.addToMainArea(editor);
+            this._shell.addToMainArea(editor);
         }
     };
-    EditorFactory.requires = [phosphide_1.IAppShell];
-    return EditorFactory;
+    EditorHandler.requires = [phosphide_1.IAppShell];
+    return EditorHandler;
 })();
 function createEditor(n) {
     var widget = new CodeMirrorWidget({
@@ -38,7 +42,7 @@ function createEditor(n) {
         lineNumbers: true,
         tabSize: 2,
     });
-    widget.title.text = "Untitled - " + n;
+    widget.title.text = "Untitled - " + n + ".ts";
     return widget;
 }
 var CodeMirrorWidget = (function (_super) {

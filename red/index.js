@@ -9,15 +9,22 @@
 var phosphide_1 = require('phosphide');
 var phosphor_widget_1 = require('phosphor-widget');
 function resolve(container) {
-    return container.resolve(redFactory);
+    return container.resolve(RedHandler).then(function (handler) { handler.run(); });
 }
 exports.resolve = resolve;
-var redFactory = {
-    requires: [phosphide_1.IAppShell],
-    create: function (shell) {
-        var view = new phosphor_widget_1.Widget();
-        view.addClass('red-content');
-        view.title.text = 'Red';
-        shell.addToLeftArea(view);
+var RedHandler = (function () {
+    function RedHandler(shell) {
+        this._shell = shell;
     }
-};
+    RedHandler.create = function (shell) {
+        return new RedHandler(shell);
+    };
+    RedHandler.prototype.run = function () {
+        var widget = new phosphor_widget_1.Widget();
+        widget.addClass('red-content');
+        widget.title.text = 'Red';
+        this._shell.addToRightArea(widget, { rank: 30 });
+    };
+    RedHandler.requires = [phosphide_1.IAppShell];
+    return RedHandler;
+})();

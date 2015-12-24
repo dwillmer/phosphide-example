@@ -9,16 +9,22 @@
 var phosphide_1 = require('phosphide');
 var phosphor_widget_1 = require('phosphor-widget');
 function resolve(container) {
-    return container.resolve(blueFactory);
+    return container.resolve(BlueHandler).then(function (handler) { handler.run(); });
 }
 exports.resolve = resolve;
-var blueFactory = {
-    requires: [phosphide_1.IAppShell],
-    create: function (shell) {
-        console.log('in blue factory');
-        var view = new phosphor_widget_1.Widget();
-        view.addClass('blue-content');
-        view.title.text = 'Blue';
-        shell.addToRightArea(view);
+var BlueHandler = (function () {
+    function BlueHandler(shell) {
+        this._shell = shell;
     }
-};
+    BlueHandler.create = function (shell) {
+        return new BlueHandler(shell);
+    };
+    BlueHandler.prototype.run = function () {
+        var widget = new phosphor_widget_1.Widget();
+        widget.addClass('blue-content');
+        widget.title.text = 'Blue';
+        this._shell.addToLeftArea(widget, { rank: 10 });
+    };
+    BlueHandler.requires = [phosphide_1.IAppShell];
+    return BlueHandler;
+})();
