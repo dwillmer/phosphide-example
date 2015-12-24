@@ -29,6 +29,8 @@ then
     npm install --production
 
     git add -A
+    git add -f node_modules
+
     git commit -m "autocommit docs"
     git push origin gh-pages
 else
