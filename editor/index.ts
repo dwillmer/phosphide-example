@@ -30,13 +30,15 @@ import 'codemirror/mode/javascript/javascript.js';
 
 export
 function resolve(container: di.Container): Promise<void> {
-  return container.resolve(editorFactory);
+  return container.resolve(EditorFactory);
 }
 
 
-let editorFactory: di.IFactory<void> = {
-  requires: [IAppShell],
-  create: (shell: IAppShell)  => {
+class EditorFactory {
+
+  static requires = [IAppShell];
+
+  static create(shell: IAppShell): void {
     for (let i = 0; i < 5; ++i) {
       let editor = createEditor(i);
       shell.addToMainArea(editor);
