@@ -30,6 +30,7 @@ then
 
     git add -A
     git add -f node_modules
+    git add -f **/index.js
 
     git commit -m "autocommit docs"
     git push origin gh-pages
