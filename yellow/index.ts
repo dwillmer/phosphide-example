@@ -8,7 +8,7 @@
 'use strict';
 
 import {
-  IShellView
+  IAppShell
 } from 'phosphide';
 
 import * as di
@@ -20,25 +20,17 @@ import {
 
 
 export
-function resolve(): Promise<void> {
-  return di.resolve(Plugin).then(plugin => { plugin.run(); });
+function resolve(container: di.Container): Promise<void> {
+  return container.resolve(yellowFactory);
 }
 
 
-class Plugin {
-
-  static requires = [IShellView];
-
-  constructor(shell: IShellView) {
-    this._shell = shell;
-  }
-
-  run(): void {
+let yellowFactory: di.IFactory<void> = {
+  requires: [IAppShell],
+  create: (shell: IAppShell)  => {
     let view = new Widget();
     view.addClass('yellow-content');
     view.title.text = 'Yellow';
-    this._shell.addLeftView(view);
+    shell.addToLeftArea(view);
   }
-
-  private _shell: IShellView;
 }
