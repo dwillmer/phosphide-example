@@ -13,8 +13,9 @@ import {
   IAppShell
 } from 'phosphide';
 
-import * as di
-  from 'phosphor-di';
+import {
+  Container
+} from 'phosphor-di';
 
 import {
   Message
@@ -29,21 +30,31 @@ import 'codemirror/mode/javascript/javascript.js';
 
 
 export
-function resolve(container: di.Container): Promise<void> {
-  return container.resolve(EditorFactory);
+function resolve(container: Container): Promise<void> {
+  return container.resolve(EditorHandler).then(handler => { handler.run(); });
 }
 
 
-class EditorFactory {
+class EditorHandler {
 
   static requires = [IAppShell];
 
-  static create(shell: IAppShell): void {
+  static create(shell: IAppShell): EditorHandler {
+    return new EditorHandler(shell);
+  }
+
+  constructor(shell: IAppShell) {
+    this._shell = shell;
+  }
+
+  run(): void {
     for (let i = 0; i < 5; ++i) {
       let editor = createEditor(i);
-      shell.addToMainArea(editor);
+      this._shell.addToMainArea(editor);
     }
   }
+
+  private _shell: IAppShell;
 }
 
 
@@ -53,7 +64,7 @@ function createEditor(n: number): CodeMirrorWidget {
     lineNumbers: true,
     tabSize: 2,
   });
-  widget.title.text = `Untitled - ${n}`;
+  widget.title.text = `Untitled - ${n}.ts`;
   return widget;
 }
 

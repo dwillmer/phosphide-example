@@ -11,8 +11,9 @@ import {
   IAppShell
 } from 'phosphide';
 
-import * as di
-  from 'phosphor-di';
+import {
+  Container
+} from 'phosphor-di';
 
 import {
   Widget
@@ -20,17 +21,29 @@ import {
 
 
 export
-function resolve(container: di.Container): Promise<void> {
-  return container.resolve(redFactory);
+function resolve(container: Container): Promise<void> {
+  return container.resolve(RedHandler).then(handler => { handler.run(); });
 }
 
 
-let redFactory: di.IFactory<void> = {
-  requires: [IAppShell],
-  create: (shell: IAppShell)  => {
-    let view = new Widget();
-    view.addClass('red-content');
-    view.title.text = 'Red';
-    shell.addToLeftArea(view);
+class RedHandler {
+
+  static requires = [IAppShell];
+
+  static create(shell: IAppShell): RedHandler {
+    return new RedHandler(shell);
   }
+
+  constructor(shell: IAppShell) {
+    this._shell = shell;
+  }
+
+  run(): void {
+    let widget = new Widget();
+    widget.addClass('red-content');
+    widget.title.text = 'Red';
+    this._shell.addToRightArea(widget, { rank: 30 });
+  }
+
+  private _shell: IAppShell;
 }
