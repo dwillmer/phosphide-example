@@ -19,18 +19,11 @@ then
     git config credential.helper "store --file=.git/credentials"
 
     rm -rf ./*
-    cp -r ../*.* .
-    cp -r ../blue/ blue/
-    cp -r ../red/ red/
-    cp -r ../yellow/ yellow/
-    cp -r ../green/ green/
-    cp -r ../editor/ editor/
-    cp -r ../theme/ theme/
-    npm install --production
+    cp ../index.html .
+    cp ../bundle.js .
+    cp -r ../theme .
 
     git add -A
-    git add -f node_modules
-    git add -f **/index.js
 
     git commit -m "autocommit docs"
     git push origin gh-pages

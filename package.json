@@ -9,17 +9,21 @@
     "phosphide": "0.0.5",
     "phosphor-di": "^0.9.0",
     "phosphor-messaging": "^1.0.6",
-    "phosphor-widget": "^1.0.0-beta.8",
-    "steal": "^0.12.7"
+    "phosphor-widget": "^1.0.0-beta.8"
   },
   "devDependencies": {
+    "css-loader": "^0.23.1",
     "http-server": "^0.8.5",
     "rimraf": "^2.4.4",
-    "typescript": "^1.6.2"
+    "style-loader": "^0.13.0",
+    "ts-loader": "^0.7.2",
+    "typescript": "^1.6.2",
+    "typescript-loader": "^1.1.3",
+    "webpack": "^1.12.9"
   },
   "scripts": {
     "clean": "rimraf blue/*.js && rimraf green/*.js && rimraf red/*.js && rimraf yellow/*.js && rimraf editor/*.js",
-    "build": "tsc --project blue && tsc --project green && tsc --project red && tsc --project yellow && tsc --project editor",
+    "build": "webpack --config webpack.conf.js",
     "postinstall": "npm dedupe",
     "serve": "http-server -c-1"
   },
