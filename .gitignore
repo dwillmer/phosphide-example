@@ -3,8 +3,3 @@
 .DS_Store
 node_modules
 bundle.js
-blue/*.js
-green/*.js
-red/*.js
-yellow/*.js
-editor/*.js
