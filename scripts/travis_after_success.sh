@@ -21,7 +21,7 @@ then
     rm -rf ./*
     cp ../index.html .
     cp ../bundle.js .
-    cp -r ../theme .
+    cp -r ../theme/ theme/
 
     git add -A
 
