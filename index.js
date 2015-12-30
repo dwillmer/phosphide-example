@@ -7,8 +7,6 @@
 |----------------------------------------------------------------------------*/
 'use strict';
 
-declare function require(name: string): any;
-
 var phosphide = require('phosphide');
 var di = require('phosphor-di');
 
@@ -16,11 +14,11 @@ var di = require('phosphor-di');
 function main() {
    phosphide.loadPlugins(new di.Container(), [
     require('phosphide/lib/appshell/plugin'),
-    require('red/index'),
-    require('blue/index'),
-    require('green/index'),
-    require('yellow/index'),
-    require('editor/index')
+    require('red'),
+    require('blue'),
+    require('green'),
+    require('yellow'),
+    require('editor')
   ]).then(function() {
     console.log('loading finished');
   });

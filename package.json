@@ -2,8 +2,7 @@
   "name": "phosphide-example",
   "version": "0.0.2",
   "description": "An example Phosphide plugin application.",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "main": "index.js",
   "dependencies": {
     "codemirror": "^5.9.0",
     "phosphide": "0.0.5",
@@ -16,21 +15,14 @@
     "http-server": "^0.8.5",
     "rimraf": "^2.4.4",
     "style-loader": "^0.13.0",
-    "ts-loader": "^0.7.2",
     "typescript": "^1.6.2",
-    "typescript-loader": "^1.1.3",
     "webpack": "^1.12.9"
   },
   "scripts": {
     "clean": "rimraf blue/*.js && rimraf green/*.js && rimraf red/*.js && rimraf yellow/*.js && rimraf editor/*.js",
-    "build": "webpack --config webpack.conf.js",
+    "build": "tsc --project red && tsc --project green && tsc --project yellow && tsc --project blue && tsc --project editor && webpack --config webpack.conf.js",
     "postinstall": "npm dedupe",
     "serve": "http-server -c-1"
-  },
-  "system": {
-    "npmIgnore": [
-      "devDependencies"
-    ]
   },
   "repository": {
     "type": "git",
