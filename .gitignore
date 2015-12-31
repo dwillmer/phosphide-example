@@ -2,6 +2,7 @@
 *.user
 .DS_Store
 node_modules
+bundle.js
 blue/*.js
 green/*.js
 red/*.js

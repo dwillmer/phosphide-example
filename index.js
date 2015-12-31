@@ -11,13 +11,18 @@ var phosphide = require('phosphide');
 var di = require('phosphor-di');
 
 
-phosphide.loadPlugins(new di.Container(), [
-  require('phosphide/lib/appshell/plugin'),
-  require('red/index'),
-  require('blue/index'),
-  require('green/index'),
-  require('yellow/index'),
-  require('editor/index')
-]).then(function() {
-  console.log('loading finished');
-});
+function main() {
+   phosphide.loadPlugins(new di.Container(), [
+    require('phosphide/lib/appshell/plugin'),
+    require('red'),
+    require('blue'),
+    require('green'),
+    require('yellow'),
+    require('editor')
+  ]).then(function() {
+    console.log('loading finished');
+  });
+}
+
+window.onload = main;
+
