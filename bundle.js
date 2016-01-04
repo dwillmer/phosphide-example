@@ -715,6 +715,7 @@
 	var arrays = __webpack_require__(8);
 	var phosphor_boxpanel_1 = __webpack_require__(9);
 	var phosphor_dockpanel_1 = __webpack_require__(34);
+	var phosphor_panel_1 = __webpack_require__(22);
 	var phosphor_splitpanel_1 = __webpack_require__(36);
 	var phosphor_stackedpanel_1 = __webpack_require__(41);
 	var phosphor_widget_1 = __webpack_require__(24);
@@ -749,7 +750,7 @@
 	    function AppShell() {
 	        _super.call(this);
 	        this.addClass(APP_SHELL_CLASS);
-	        var topPanel = new phosphor_widget_1.Panel();
+	        var topPanel = new phosphor_panel_1.Panel();
 	        var hboxPanel = new phosphor_boxpanel_1.BoxPanel();
 	        var dockPanel = new phosphor_dockpanel_1.DockPanel();
 	        var hsplitPanel = new phosphor_splitpanel_1.SplitPanel();
@@ -769,6 +770,7 @@
 	        leftHandler.stackedPanel.id = 'p-left-stack';
 	        rightHandler.stackedPanel.id = 'p-right-stack';
 	        dockPanel.id = 'p-main-dock-panel';
+	        dockPanel.spacing = 8; // TODO make this configurable?
 	        hsplitPanel.orientation = phosphor_splitpanel_1.SplitPanel.Horizontal;
 	        hsplitPanel.spacing = 1; // TODO make this configurable?
 	        phosphor_splitpanel_1.SplitPanel.setStretch(leftHandler.stackedPanel, 0);
@@ -920,13 +922,18 @@
 	     */
 	    SideBarHandler.prototype._refreshVisibility = function () {
 	        this._sideBar.setHidden(this._sideBar.titleCount() === 0);
-	        this._stackedPanel.setHidden(this._stackedPanel.currentWidget === null);
+	        this._stackedPanel.setHidden(this._sideBar.currentTitle === null);
 	    };
 	    /**
 	     * Handle the `currentChanged` signal from the sidebar.
 	     */
 	    SideBarHandler.prototype._onCurrentChanged = function (sender, args) {
-	        this._stackedPanel.currentWidget = this._findTitleWidget(args.newValue);
+	        var oldWidget = this._findTitleWidget(args.oldValue);
+	        var newWidget = this._findTitleWidget(args.newValue);
+	        if (oldWidget)
+	            oldWidget.hide();
+	        if (newWidget)
+	            newWidget.show();
 	        this._refreshVisibility();
 	    };
 	    /*
@@ -6024,6 +6031,9 @@
 	 * A base class for creating objects which wrap a DOM node.
 	 */
 	var NodeWrapper = (function () {
+	    /**
+	     * Construct a new node wrapper.
+	     */
 	    function NodeWrapper() {
 	        this._node = this.constructor.createNode();
 	    }
@@ -6135,7 +6145,7 @@
 	    return NodeWrapper;
 	})();
 	exports.NodeWrapper = NodeWrapper;
-	//# sourceMappingURL=index.js.map
+
 
 /***/ },
 /* 29 */
@@ -6736,19 +6746,6 @@
 	var DockPanel = (function (_super) {
 	    __extends(DockPanel, _super);
 	    /**
-	     * Ensure the specified content widget is selected.
-	     *
-	     * @param widget - The content widget of interest.
-	     *
-	     * #### Notes
-	     * If the widget is not contained in a dock panel, or is already
-	     * the selected tab in its respective tab panel, this is a no-op.
-	     */
-	    // TODO figure out the right API for this.
-	    // static select(widget: Widget): void {
-	    //   selectWidget(widget);
-	    // }
-	    /**
 	     * Construct a new dock panel.
 	     */
 	    function DockPanel() {
@@ -6976,62 +6973,9 @@
 	     */
 	    function DockTabPanel() {
 	        _super.call(this);
-	        this._drag = null;
 	        this.addClass(TAB_PANEL_CLASS);
 	        this.tabBar.tabsMovable = true;
-	        this.tabBar.tabDetachRequested.connect(this._onTabDetachRequested, this);
 	    }
-	    /**
-	     * Dispose of the resources held by the tab bar.
-	     */
-	    DockTabPanel.prototype.dispose = function () {
-	        if (this._drag) {
-	            this._drag.dispose();
-	            this._drag = null;
-	        }
-	        _super.prototype.dispose.call(this);
-	    };
-	    /**
-	     * Handle the `widgetRemoved` signal for the stacked panel.
-	     */
-	    DockTabPanel.prototype.onWidgetRemoved = function (sender, child) {
-	        _super.prototype.onWidgetRemoved.call(this, sender, child);
-	        if (sender.childCount() === 0) {
-	            DockPanelPrivate.removeTabPanel(this);
-	        }
-	    };
-	    /**
-	     * Handle the `tabDetachRequested` signal for the tab bar.
-	     */
-	    DockTabPanel.prototype._onTabDetachRequested = function (sender, args) {
-	        var _this = this;
-	        // Do nothing if a drag is already in progress.
-	        if (this._drag) {
-	            return;
-	        }
-	        // Release the tab bar's hold on the mouse.
-	        sender.releaseMouse();
-	        // Setup the mime data for the drag operation.
-	        var mimeData = new phosphor_dragdrop_1.MimeData();
-	        var widget = this.findWidgetByTitle(args.title);
-	        mimeData.setData(FACTORY_MIME, function () { return widget; });
-	        // Create the drag image for the drag operation.
-	        var tab = args.node;
-	        var dragImage = tab.cloneNode(true);
-	        // Create the drag object to manage the drag-drop operation.
-	        this._drag = new phosphor_dragdrop_1.Drag({
-	            mimeData: mimeData,
-	            dragImage: dragImage,
-	            proposedAction: phosphor_dragdrop_1.DropAction.Move,
-	            supportedActions: phosphor_dragdrop_1.DropActions.Move,
-	        });
-	        // Start the drag operation and cleanup when done.
-	        tab.classList.add(HIDDEN_CLASS);
-	        this._drag.start(args.clientX, args.clientY).then(function () {
-	            _this._drag = null;
-	            tab.classList.remove(HIDDEN_CLASS);
-	        });
-	    };
 	    return DockTabPanel;
 	})(phosphor_tabs_1.TabPanel);
 	/**
@@ -7144,7 +7088,7 @@
 	        // for the insert location.
 	        widget.parent = null;
 	        // Setup the new tab panel to host the widget.
-	        var tabPanel = new DockTabPanel();
+	        var tabPanel = createTabPanel();
 	        tabPanel.addChild(widget);
 	        // If there is no root, add the new tab panel as the root.
 	        if (!getRoot(owner)) {
@@ -7327,7 +7271,6 @@
 	        grandPanel.setSizes(grandSizes);
 	        splitPanel.dispose();
 	    }
-	    DockPanelPrivate.removeTabPanel = removeTabPanel;
 	    /**
 	     * Hide the dock panel overlay for the given dock panel.
 	     */
@@ -7567,7 +7510,7 @@
 	            return;
 	        var layout = owner.layout;
 	        layout.addChild(root);
-	        layout.currentWidget = root;
+	        root.show();
 	    }
 	    /**
 	     * The creation handler for the dock panel `overlayProperty`.
@@ -7680,7 +7623,7 @@
 	    function ensureFirstTabPanel(owner) {
 	        var tabs = findFirstTabPanel(owner);
 	        if (!tabs) {
-	            tabs = new DockTabPanel();
+	            tabs = createTabPanel();
 	            setRoot(owner, tabs);
 	        }
 	        return tabs;
@@ -7708,7 +7651,6 @@
 	        var newRoot = new DockSplitPanel(orientation, owner.spacing);
 	        newRoot.addChild(oldRoot);
 	        setRoot(owner, newRoot);
-	        oldRoot.show();
 	        return newRoot;
 	    }
 	    /**
@@ -7849,6 +7791,58 @@
 	            }
 	        }
 	        return zone;
+	    }
+	    /**
+	     * The current tab drag object.
+	     */
+	    var currentDrag = null;
+	    /**
+	     * Create a new tab panel for a dock panel.
+	     */
+	    function createTabPanel() {
+	        var panel = new DockTabPanel();
+	        panel.tabBar.tabDetachRequested.connect(onTabDetachRequested);
+	        panel.stackedPanel.widgetRemoved.connect(onWidgetRemoved);
+	        return panel;
+	    }
+	    /**
+	     * Handle the `tabDetachRequested` signal from a dock tab bar.
+	     */
+	    function onTabDetachRequested(sender, args) {
+	        // Do nothing if a drag is already in progress.
+	        if (currentDrag) {
+	            return;
+	        }
+	        // Release the tab bar's hold on the mouse.
+	        sender.releaseMouse();
+	        // Setup the mime data for the drag operation.
+	        var mimeData = new phosphor_dragdrop_1.MimeData();
+	        var widget = args.item;
+	        mimeData.setData(FACTORY_MIME, function () { return widget; });
+	        // Create the drag image for the drag operation.
+	        var tab = sender.tabAt(args.index);
+	        var dragImage = tab.cloneNode(true);
+	        // Create the drag object to manage the drag-drop operation.
+	        currentDrag = new phosphor_dragdrop_1.Drag({
+	            mimeData: mimeData,
+	            dragImage: dragImage,
+	            proposedAction: phosphor_dragdrop_1.DropAction.Move,
+	            supportedActions: phosphor_dragdrop_1.DropActions.Move,
+	        });
+	        // Start the drag operation and cleanup when done.
+	        tab.classList.add(HIDDEN_CLASS);
+	        currentDrag.start(args.clientX, args.clientY).then(function () {
+	            currentDrag = null;
+	            tab.classList.remove(HIDDEN_CLASS);
+	        });
+	    }
+	    /**
+	     * Handle the `widgetRemvoed` signal for a dock stacked panel.
+	     */
+	    function onWidgetRemoved(sender, widget) {
+	        if (sender.childCount() === 0) {
+	            removeTabPanel(sender.parent);
+	        }
 	    }
 	})(DockPanelPrivate || (DockPanelPrivate = {}));
 
@@ -8687,6 +8681,10 @@
 	var phosphor_properties_1 = __webpack_require__(6);
 	var phosphor_widget_1 = __webpack_require__(24);
 	/**
+	 * The class name added to hidden split handles.
+	 */
+	var HIDDEN_CLASS = 'p-mod-hidden';
+	/**
 	 * The class name added to horizontal split panels.
 	 */
 	var HORIZONTAL_CLASS = 'p-mod-horizontal';
@@ -8831,16 +8829,16 @@
 	    SplitLayout.prototype.moveHandle = function (index, position) {
 	        // Bail if the index is invalid or the handle is hidden.
 	        var handle = this._handles[index];
-	        if (!handle || handle.hidden) {
+	        if (!handle || handle.classList.contains(HIDDEN_CLASS)) {
 	            return;
 	        }
 	        // Compute the delta movement for the handle.
 	        var delta;
 	        if (this._orientation === Orientation.Horizontal) {
-	            delta = position - handle.node.offsetLeft;
+	            delta = position - handle.offsetLeft;
 	        }
 	        else {
-	            delta = position - handle.node.offsetTop;
+	            delta = position - handle.offsetTop;
 	        }
 	        // Bail if there is no handle movement.
 	        if (delta === 0) {
@@ -8892,7 +8890,7 @@
 	        arrays.insert(this._handles, index, handle);
 	        SplitLayoutPrivate.prepareGeometry(child);
 	        this.parent.node.appendChild(child.node);
-	        this.parent.node.appendChild(handle.node);
+	        this.parent.node.appendChild(handle);
 	        if (this.parent.isAttached)
 	            phosphor_messaging_1.sendMessage(child, phosphor_widget_1.Widget.MsgAfterAttach);
 	        this.parent.fit();
@@ -8930,7 +8928,7 @@
 	        if (this.parent.isAttached)
 	            phosphor_messaging_1.sendMessage(child, phosphor_widget_1.Widget.MsgBeforeDetach);
 	        this.parent.node.removeChild(child.node);
-	        this.parent.node.removeChild(handle.node);
+	        this.parent.node.removeChild(handle);
 	        SplitLayoutPrivate.resetGeometry(child);
 	        this.parent.fit();
 	    };
@@ -9004,17 +9002,17 @@
 	        for (var i = 0, n = this.childCount(); i < n; ++i) {
 	            var handle = this._handles[i];
 	            if (this.childAt(i).isHidden) {
-	                handle.hidden = true;
+	                handle.classList.add(HIDDEN_CLASS);
 	            }
 	            else {
-	                handle.hidden = false;
+	                handle.classList.remove(HIDDEN_CLASS);
 	                lastHandle = handle;
 	                nVisible++;
 	            }
 	        }
 	        // Hide the handle for the last visible child.
 	        if (lastHandle)
-	            lastHandle.hidden = true;
+	            lastHandle.classList.add(HIDDEN_CLASS);
 	        // Update the fixed space for the visible items.
 	        this._fixed = this._spacing * Math.max(0, nVisible - 1);
 	        // Setup the initial size limits.
@@ -9218,7 +9216,7 @@
 	     */
 	    function createHandle(factory) {
 	        var handle = factory.createHandle();
-	        handle.node.style.position = 'absolute';
+	        handle.style.position = 'absolute';
 	        return handle;
 	    }
 	    SplitLayoutPrivate.createHandle = createHandle;
@@ -9288,7 +9286,7 @@
 	     * Set the layout geometry of a split handle.
 	     */
 	    function setHandleGeo(handle, left, top, width, height) {
-	        var style = handle.node.style;
+	        var style = handle.style;
 	        style.top = top + "px";
 	        style.left = left + "px";
 	        style.width = width + "px";
@@ -9453,7 +9451,6 @@
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var phosphor_domutil_1 = __webpack_require__(12);
-	var phosphor_nodewrapper_1 = __webpack_require__(28);
 	var phosphor_panel_1 = __webpack_require__(22);
 	var layout_1 = __webpack_require__(37);
 	/**
@@ -9468,40 +9465,6 @@
 	 * The class name added to split panel handles.
 	 */
 	var HANDLE_CLASS = 'p-SplitPanel-handle';
-	/**
-	 * The class name added to hidden split handles.
-	 */
-	var HIDDEN_CLASS = 'p-mod-hidden';
-	/**
-	 * A concrete implementation of `ISplitHandle`.
-	 *
-	 * #### Notes
-	 * This is the default split handle type for a [[SplitPanel]].
-	 */
-	var SplitHandle = (function (_super) {
-	    __extends(SplitHandle, _super);
-	    function SplitHandle() {
-	        _super.apply(this, arguments);
-	    }
-	    Object.defineProperty(SplitHandle.prototype, "hidden", {
-	        /**
-	         * Get whether the split handle is hidden.
-	         */
-	        get: function () {
-	            return this.hasClass(HIDDEN_CLASS);
-	        },
-	        /**
-	         * Set whether the split handle is hidden.
-	         */
-	        set: function (value) {
-	            this.toggleClass(HIDDEN_CLASS, value);
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    return SplitHandle;
-	})(phosphor_nodewrapper_1.NodeWrapper);
-	exports.SplitHandle = SplitHandle;
 	/**
 	 * A panel which arranges its children into resizable sections.
 	 *
@@ -9531,8 +9494,8 @@
 	     * This may be reimplemented to create custom split handles.
 	     */
 	    SplitPanel.createHandle = function () {
-	        var handle = new SplitHandle();
-	        handle.addClass(HANDLE_CLASS);
+	        var handle = document.createElement('div');
+	        handle.className = HANDLE_CLASS;
 	        return handle;
 	    };
 	    /**
@@ -9702,7 +9665,7 @@
 	        document.addEventListener('contextmenu', this, true);
 	        // Compute the offset delta for the handle press.
 	        var delta;
-	        var rect = handle.node.getBoundingClientRect();
+	        var rect = handle.getBoundingClientRect();
 	        if (layout.orientation === layout_1.Orientation.Horizontal) {
 	            delta = event.clientX - rect.left;
 	        }
@@ -9710,7 +9673,7 @@
 	            delta = event.clientY - rect.top;
 	        }
 	        // Override the cursor and store the press data.
-	        var style = window.getComputedStyle(handle.node);
+	        var style = window.getComputedStyle(handle);
 	        var override = phosphor_domutil_1.overrideCursor(style.cursor);
 	        this._pressData = { index: index, delta: delta, override: override };
 	    };
@@ -9817,7 +9780,7 @@
 	    function findHandle(layout, target) {
 	        for (var i = 0, n = layout.childCount(); i < n; ++i) {
 	            var handle = layout.handleAt(i);
-	            if (handle.node.contains(target)) {
+	            if (handle.contains(target)) {
 	                return { index: i, handle: handle };
 	            }
 	        }
@@ -10309,46 +10272,44 @@
 	};
 	var arrays = __webpack_require__(8);
 	var phosphor_domutil_1 = __webpack_require__(12);
-	var phosphor_properties_1 = __webpack_require__(6);
 	var phosphor_signaling_1 = __webpack_require__(26);
 	var phosphor_widget_1 = __webpack_require__(24);
-	// TODO - need better solution for storing these class names
 	/**
 	 * The class name added to TabBar instances.
 	 */
 	var TAB_BAR_CLASS = 'p-TabBar';
 	/**
-	 * The class name added to the tab bar header node.
-	 */
-	var HEADER_CLASS = 'p-TabBar-header';
-	/**
-	 * The class name added to the tab bar body node.
+	 * The class name added to a tab bar body node.
 	 */
 	var BODY_CLASS = 'p-TabBar-body';
 	/**
-	 * The class name added to the tab bar content node.
+	 * The class name added to a tab bar header node.
+	 */
+	var HEADER_CLASS = 'p-TabBar-header';
+	/**
+	 * The class name added to a tab bar content node.
 	 */
 	var CONTENT_CLASS = 'p-TabBar-content';
 	/**
-	 * The class name added to the tab bar footer node.
+	 * The class name added to a tab bar footer node.
 	 */
 	var FOOTER_CLASS = 'p-TabBar-footer';
 	/**
-	 * The class name added to a tab.
+	 * The class name added to a tab bar tab.
 	 */
 	var TAB_CLASS = 'p-TabBar-tab';
 	/**
 	 * The class name added to a tab text node.
 	 */
-	var TEXT_CLASS = 'p-TabBar-tab-text';
+	var TEXT_CLASS = 'p-TabBar-tabText';
 	/**
 	 * The class name added to a tab icon node.
 	 */
-	var ICON_CLASS = 'p-TabBar-tab-icon';
+	var ICON_CLASS = 'p-TabBar-tabIcon';
 	/**
-	 * The class name added to a tab close node.
+	 * The class name added to a tab close icon node.
 	 */
-	var CLOSE_CLASS = 'p-TabBar-tab-close';
+	var CLOSE_CLASS = 'p-TabBar-tabCloseIcon';
 	/**
 	 * The class name added to a tab bar and tab when dragging.
 	 */
@@ -10374,7 +10335,7 @@
 	 */
 	var TRANSITION_DURATION = 150; // Keep in sync with CSS.
 	/**
-	 * A widget which displays titles as a row of selectable tabs.
+	 * A widget which displays tab items as a row of tabs.
 	 */
 	var TabBar = (function (_super) {
 	    __extends(TabBar, _super);
@@ -10383,9 +10344,11 @@
 	     */
 	    function TabBar() {
 	        _super.call(this);
-	        this._dirty = false;
 	        this._tabsMovable = false;
-	        this._titles = [];
+	        this._items = [];
+	        this._tabs = [];
+	        this._dirtySet = new Set();
+	        this._currentItem = null;
 	        this._dragData = null;
 	        this.addClass(TAB_BAR_CLASS);
 	    }
@@ -10396,12 +10359,12 @@
 	        var node = document.createElement('div');
 	        var header = document.createElement('div');
 	        var body = document.createElement('div');
-	        var content = document.createElement('ul');
 	        var footer = document.createElement('div');
+	        var content = document.createElement('ul');
 	        header.className = HEADER_CLASS;
 	        body.className = BODY_CLASS;
-	        content.className = CONTENT_CLASS;
 	        footer.className = FOOTER_CLASS;
+	        content.className = CONTENT_CLASS;
 	        body.appendChild(content);
 	        node.appendChild(header);
 	        node.appendChild(body);
@@ -10409,13 +10372,94 @@
 	        return node;
 	    };
 	    /**
+	     * Create and initialize a tab node for a tab bar.
+	     *
+	     * @param title - The title to use for the initial tab state.
+	     *
+	     * @returns A new DOM node to use as a tab in a tab bar.
+	     *
+	     * #### Notes
+	     * It is not necessary to subscribe to the `changed` signal of the
+	     * title. The tab bar subscribes to that signal and will call the
+	     * [[updateTab]] static method automatically as needed.
+	     *
+	     * This method may be reimplemented to create custom tabs.
+	     */
+	    TabBar.createTab = function (title) {
+	        var node = document.createElement('li');
+	        var icon = document.createElement('span');
+	        var text = document.createElement('span');
+	        var close = document.createElement('span');
+	        node.className = TAB_CLASS;
+	        icon.className = ICON_CLASS;
+	        text.className = TEXT_CLASS;
+	        close.className = CLOSE_CLASS;
+	        node.appendChild(icon);
+	        node.appendChild(text);
+	        node.appendChild(close);
+	        this.updateTab(node, title);
+	        return node;
+	    };
+	    /**
+	     * Update a tab node to reflect the current state of a title.
+	     *
+	     * @param tab - A tab node created by a call to [[createTab]].
+	     *
+	     * @param title - The title object to use for the tab state.
+	     *
+	     * #### Notes
+	     * This is called automatically when the title state changes.
+	     *
+	     * If the [[createTab]] method is reimplemented, this method should
+	     * also be reimplemented so that the tab state is properly updated.
+	     */
+	    TabBar.updateTab = function (tab, title) {
+	        var tabInfix = title.className ? ' ' + title.className : '';
+	        var tabSuffix = title.closable ? ' ' + CLOSABLE_CLASS : '';
+	        var iconSuffix = title.icon ? ' ' + title.icon : '';
+	        var icon = tab.firstChild;
+	        var text = icon.nextSibling;
+	        tab.className = TAB_CLASS + tabInfix + tabSuffix;
+	        icon.className = ICON_CLASS + iconSuffix;
+	        text.textContent = title.text;
+	    };
+	    /**
+	     * Get the close icon node for a given tab node.
+	     *
+	     * @param tab - A tab node created by a call to [[createTab]].
+	     *
+	     * @returns The close icon node for the tab node.
+	     *
+	     * #### Notes
+	     * The close icon node is used to correctly process click events.
+	     *
+	     * If the [[createTab]] method is reimplemented, this method should
+	     * also be reimplemented so that the correct icon node is returned.
+	     */
+	    TabBar.tabCloseIcon = function (tab) {
+	        return tab.lastChild;
+	    };
+	    /**
 	     * Dispose of the resources held by the widget.
 	     */
 	    TabBar.prototype.dispose = function () {
 	        this._releaseMouse();
-	        this._titles.length = 0;
+	        this._tabs.length = 0;
+	        this._items.length = 0;
+	        this._dirtySet.clear();
+	        this._currentItem = null;
 	        _super.prototype.dispose.call(this);
 	    };
+	    Object.defineProperty(TabBar.prototype, "currentChanged", {
+	        /**
+	         * A signal emitted when the current tab is changed.
+	         */
+	        get: function () {
+	            return TabBarPrivate.currentChangedSignal.bind(this);
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
 	    Object.defineProperty(TabBar.prototype, "tabMoved", {
 	        /**
 	         * A signal emitted when a tab is moved by the user.
@@ -10446,28 +10490,29 @@
 	        enumerable: true,
 	        configurable: true
 	    });
-	    Object.defineProperty(TabBar.prototype, "currentChanged", {
+	    Object.defineProperty(TabBar.prototype, "currentItem", {
 	        /**
-	         * A signal emitted when the current title is changed.
+	         * Get the currently selected tab item.
 	         */
 	        get: function () {
-	            return TabBarPrivate.currentChangedSignal.bind(this);
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(TabBar.prototype, "currentTitle", {
-	        /**
-	         * Get the currently selected title.
-	         */
-	        get: function () {
-	            return TabBarPrivate.currentTitleProperty.get(this);
+	            return this._currentItem;
 	        },
 	        /**
-	         * Set the currently selected title.
+	         * Set the currently selected tab item.
 	         */
 	        set: function (value) {
-	            TabBarPrivate.currentTitleProperty.set(this, value);
+	            var item = value || null;
+	            if (this._currentItem === item) {
+	                return;
+	            }
+	            var index = item ? this._items.indexOf(item) : -1;
+	            if (item && index === -1) {
+	                console.warn('Tab item not contained in tab bar.');
+	                return;
+	            }
+	            this._currentItem = item;
+	            this.currentChanged.emit({ index: index, item: item });
+	            this.update();
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -10493,7 +10538,7 @@
 	         * Get the tab bar header node.
 	         *
 	         * #### Notes
-	         * This can be used to add extra header content.
+	         * This node can be used to add extra content to the tab bar header.
 	         *
 	         * This is a read-only property.
 	         */
@@ -10508,7 +10553,7 @@
 	         * Get the tab bar body node.
 	         *
 	         * #### Notes
-	         * This can be used to add extra body content.
+	         * This node can be used to add extra content to the tab bar.
 	         *
 	         * This is a read-only property.
 	         */
@@ -10518,27 +10563,12 @@
 	        enumerable: true,
 	        configurable: true
 	    });
-	    Object.defineProperty(TabBar.prototype, "contentNode", {
-	        /**
-	         * Get the tab bar content node.
-	         *
-	         * #### Notes
-	         * Modifying this node can lead to undefined behavior.
-	         *
-	         * This is a read-only property.
-	         */
-	        get: function () {
-	            return this.node.getElementsByClassName(CONTENT_CLASS)[0];
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
 	    Object.defineProperty(TabBar.prototype, "footerNode", {
 	        /**
 	         * Get the tab bar footer node.
 	         *
 	         * #### Notes
-	         * This can be used to add extra footer content.
+	         * This node can be used to add extra content to the tab bar footer.
 	         *
 	         * This is a read-only property.
 	         */
@@ -10548,104 +10578,130 @@
 	        enumerable: true,
 	        configurable: true
 	    });
+	    Object.defineProperty(TabBar.prototype, "contentNode", {
+	        /**
+	         * Get the tab bar content node.
+	         *
+	         * #### Notes
+	         * This is the node which holds the tab nodes.
+	         *
+	         * Modifying this node directly can lead to undefined behavior.
+	         *
+	         * This is a read-only property.
+	         */
+	        get: function () {
+	            return this.node.getElementsByClassName(CONTENT_CLASS)[0];
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
 	    /**
-	     * Get the number of title objects in the tab bar.
+	     * Get the number of tab items in the tab bar.
 	     *
-	     * @returns The number of title objects in the tab bar.
+	     * @returns The number of tab items in the tab bar.
 	     */
-	    TabBar.prototype.titleCount = function () {
-	        return this._titles.length;
+	    TabBar.prototype.itemCount = function () {
+	        return this._items.length;
 	    };
 	    /**
-	     * Get the title object at the specified index.
+	     * Get the tab item at the specified index.
 	     *
-	     * @param index - The index of the title object of interest.
+	     * @param index - The index of the tab item of interest.
 	     *
-	     * @returns The title at the specified index, or `undefined`.
+	     * @returns The tab item at the specified index, or `undefined`.
 	     */
-	    TabBar.prototype.titleAt = function (index) {
-	        return this._titles[index];
+	    TabBar.prototype.itemAt = function (index) {
+	        return this._items[index];
 	    };
 	    /**
-	     * Get the index of the specified title object.
+	     * Get the index of the specified tab item.
 	     *
-	     * @param title - The title object of interest.
+	     * @param item - The tab item of interest.
 	     *
-	     * @returns The index of the specified title, or `-1`.
+	     * @returns The index of the specified item, or `-1`.
 	     */
-	    TabBar.prototype.titleIndex = function (title) {
-	        return this._titles.indexOf(title);
+	    TabBar.prototype.itemIndex = function (item) {
+	        return this._items.indexOf(item);
 	    };
 	    /**
-	     * Add a title object to the end of the tab bar.
+	     * Add a tab item to the end of the tab bar.
 	     *
-	     * @param title - The title object to add to the tab bar.
+	     * @param item - The tab item to add to the tab bar.
 	     *
 	     * #### Notes
-	     * If the title is already added to the tab bar, it will be moved.
+	     * If the item is already added to the tab bar, it will be moved.
 	     */
-	    TabBar.prototype.addTitle = function (title) {
-	        this.insertTitle(this.titleCount(), title);
+	    TabBar.prototype.addItem = function (item) {
+	        this.insertItem(this.itemCount(), item);
 	    };
 	    /**
-	     * Insert a title object at the specified index.
+	     * Insert a tab item at the specified index.
 	     *
-	     * @param index - The index at which to insert the title.
+	     * @param index - The index at which to insert the item.
 	     *
-	     * @param title - The title object to insert into to the tab bar.
+	     * @param item - The tab item to insert into the tab bar.
 	     *
 	     * #### Notes
-	     * If the title is already added to the tab bar, it will be moved.
+	     * If the item is already added to the tab bar, it will be moved.
 	     */
-	    TabBar.prototype.insertTitle = function (index, title) {
-	        // Release the mouse before making changes.
+	    TabBar.prototype.insertItem = function (index, item) {
 	        this._releaseMouse();
-	        // Insert the new title or move an existing title.
-	        var n = this.titleCount();
-	        var i = this.titleIndex(title);
+	        var n = this._items.length;
+	        var i = this._items.indexOf(item);
 	        var j = Math.max(0, Math.min(index | 0, n));
 	        if (i !== -1) {
 	            if (j === n)
 	                j--;
 	            if (i === j)
 	                return;
-	            arrays.move(this._titles, i, j);
+	            arrays.move(this._tabs, i, j);
+	            arrays.move(this._items, i, j);
+	            this.contentNode.insertBefore(this._tabs[j], this._tabs[j + 1]);
 	        }
 	        else {
-	            arrays.insert(this._titles, j, title);
-	            title.changed.connect(this._onTitleChanged, this);
-	            if (!this.currentTitle)
-	                this.currentTitle = title;
+	            var tab = this.constructor.createTab(item.title);
+	            arrays.insert(this._tabs, j, tab);
+	            arrays.insert(this._items, j, item);
+	            this.contentNode.insertBefore(tab, this._tabs[j + 1]);
+	            item.title.changed.connect(this._onTitleChanged, this);
+	            if (!this.currentItem)
+	                this.currentItem = item;
 	        }
-	        // Flip the dirty flag and schedule a full update.
-	        this._dirty = true;
 	        this.update();
 	    };
 	    /**
-	     * Remove a title object from the tab bar.
+	     * Remove a tab item from the tab bar.
 	     *
-	     * @param title - The title object to remove from the tab bar.
+	     * @param item - The tab item to remove from the tab bar.
 	     *
 	     * #### Notes
-	     * If the title is not in the tab bar, this is a no-op.
+	     * If the item is not in the tab bar, this is a no-op.
 	     */
-	    TabBar.prototype.removeTitle = function (title) {
-	        // Release the mouse before making changes.
+	    TabBar.prototype.removeItem = function (item) {
 	        this._releaseMouse();
-	        // Remove the specified title, or bail if it doesn't exist.
-	        var i = arrays.remove(this._titles, title);
+	        var i = arrays.remove(this._items, item);
 	        if (i === -1) {
 	            return;
 	        }
-	        // Disconnect the title changed handler.
-	        title.changed.disconnect(this._onTitleChanged, this);
-	        // Selected the next best tab if removing the current tab.
-	        if (this.currentTitle === title) {
-	            this.currentTitle = this._titles[i] || this._titles[i - 1];
+	        this._dirtySet.delete(item.title);
+	        item.title.changed.disconnect(this._onTitleChanged, this);
+	        this.contentNode.removeChild(arrays.removeAt(this._tabs, i));
+	        if (this.currentItem === item) {
+	            var next = this._items[i];
+	            var prev = this._items[i - 1];
+	            this.currentItem = next || prev;
 	        }
-	        // Flip the dirty flag and schedule a full update.
-	        this._dirty = true;
 	        this.update();
+	    };
+	    /**
+	     * Get the tab node for the item at the given index.
+	     *
+	     * @param index - The index of the tab item of interest.
+	     *
+	     * @returns The tab node for the item, or `undefined`.
+	     */
+	    TabBar.prototype.tabAt = function (index) {
+	        return this._tabs[index];
 	    };
 	    /**
 	     * Release the mouse and restore the non-dragged tab positions.
@@ -10701,21 +10757,35 @@
 	     * A message handler invoked on a `'before-detach'` message.
 	     */
 	    TabBar.prototype.onBeforeDetach = function (msg) {
-	        this._releaseMouse();
 	        this.node.removeEventListener('click', this);
 	        this.node.removeEventListener('mousedown', this);
+	        this._releaseMouse();
 	    };
 	    /**
 	     * A message handler invoked on an `'update-request'` message.
 	     */
 	    TabBar.prototype.onUpdateRequest = function (msg) {
-	        if (this._dirty) {
-	            this._dirty = false;
-	            TabBarPrivate.updateTabs(this);
+	        var tabs = this._tabs;
+	        var items = this._items;
+	        var dirty = this._dirtySet;
+	        var current = this._currentItem;
+	        var constructor = this.constructor;
+	        for (var i = 0, n = tabs.length; i < n; ++i) {
+	            var tab = tabs[i];
+	            var item = items[i];
+	            if (dirty.has(item.title)) {
+	                constructor.updateTab(tab, item.title);
+	            }
+	            if (item === current) {
+	                tab.classList.add(CURRENT_CLASS);
+	                tab.style.zIndex = "" + n;
+	            }
+	            else {
+	                tab.classList.remove(CURRENT_CLASS);
+	                tab.style.zIndex = "" + (n - i - 1);
+	            }
 	        }
-	        else {
-	            TabBarPrivate.updateZOrder(this);
-	        }
+	        dirty.clear();
 	    };
 	    /**
 	     * Handle the `'keydown'` event for the tab bar.
@@ -10741,7 +10811,9 @@
 	            return;
 	        }
 	        // Do nothing if the click is not on a tab.
-	        var i = TabBarPrivate.hitTestTabs(this, event.clientX, event.clientY);
+	        var x = event.clientX;
+	        var y = event.clientY;
+	        var i = arrays.findIndex(this._tabs, function (tab) { return phosphor_domutil_1.hitTest(tab, x, y); });
 	        if (i < 0) {
 	            return;
 	        }
@@ -10749,17 +10821,17 @@
 	        event.preventDefault();
 	        event.stopPropagation();
 	        // Ignore the click if the title is not closable.
-	        var title = this._titles[i];
-	        if (!title.closable) {
+	        var item = this._items[i];
+	        if (!item.title.closable) {
 	            return;
 	        }
-	        // Ignore the click if the close icon wasn't clicked.
-	        var icon = TabBarPrivate.closeIconNode(this, i);
+	        // Ignore the click if it was not on a close icon.
+	        var icon = this.constructor.tabCloseIcon(this._tabs[i]);
 	        if (!icon.contains(event.target)) {
 	            return;
 	        }
 	        // Emit the tab close requested signal.
-	        this.tabCloseRequested.emit(title);
+	        this.tabCloseRequested.emit({ index: i, item: item });
 	    };
 	    /**
 	     * Handle the `'mousedown'` event for the tab bar.
@@ -10774,7 +10846,9 @@
 	            return;
 	        }
 	        // Do nothing if the press is not on a tab.
-	        var i = TabBarPrivate.hitTestTabs(this, event.clientX, event.clientY);
+	        var x = event.clientX;
+	        var y = event.clientY;
+	        var i = arrays.findIndex(this._tabs, function (tab) { return phosphor_domutil_1.hitTest(tab, x, y); });
 	        if (i < 0) {
 	            return;
 	        }
@@ -10782,20 +10856,24 @@
 	        event.preventDefault();
 	        event.stopPropagation();
 	        // Ignore the press if it was on a close icon.
-	        var icon = TabBarPrivate.closeIconNode(this, i);
+	        var icon = this.constructor.tabCloseIcon(this._tabs[i]);
 	        if (icon.contains(event.target)) {
 	            return;
 	        }
 	        // Setup the drag data if the tabs are movable.
 	        if (this._tabsMovable) {
-	            this._dragData = TabBarPrivate.initDrag(i, event);
+	            this._dragData = new TabBarPrivate.DragData();
+	            this._dragData.index = i;
+	            this._dragData.tab = this._tabs[i];
+	            this._dragData.pressX = event.clientX;
+	            this._dragData.pressY = event.clientY;
 	            document.addEventListener('mousemove', this, true);
 	            document.addEventListener('mouseup', this, true);
 	            document.addEventListener('keydown', this, true);
 	            document.addEventListener('contextmenu', this, true);
 	        }
-	        // Update the current title.
-	        this.currentTitle = this._titles[i];
+	        // Update the current item to the pressed item.
+	        this.currentItem = this._items[i];
 	    };
 	    /**
 	     * Handle the `'mousemove'` event for the tab bar.
@@ -10808,8 +10886,41 @@
 	        // Suppress the event during a drag.
 	        event.preventDefault();
 	        event.stopPropagation();
-	        // Update the tab drag positions.
-	        TabBarPrivate.moveDrag(this, this._dragData, event);
+	        // Ensure the drag threshold is exceeded before moving the tab.
+	        var data = this._dragData;
+	        if (!data.dragActive) {
+	            var dx = Math.abs(event.clientX - data.pressX);
+	            var dy = Math.abs(event.clientY - data.pressY);
+	            if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
+	                return;
+	            }
+	            // Fill in the rest of the drag data measurements.
+	            var tabRect = data.tab.getBoundingClientRect();
+	            data.tabLeft = data.tab.offsetLeft;
+	            data.tabWidth = tabRect.width;
+	            data.tabPressX = data.pressX - tabRect.left;
+	            data.tabLayout = TabBarPrivate.snapTabLayout(this._tabs);
+	            data.contentRect = this.contentNode.getBoundingClientRect();
+	            data.override = phosphor_domutil_1.overrideCursor('default');
+	            // Add the dragging classes and mark the drag as active.
+	            data.tab.classList.add(DRAGGING_CLASS);
+	            this.addClass(DRAGGING_CLASS);
+	            data.dragActive = true;
+	        }
+	        // Emit the detach request signal if the threshold is exceeded.
+	        if (!data.detachRequested && TabBarPrivate.detachExceeded(data, event)) {
+	            data.detachRequested = true;
+	            var index = data.index;
+	            var item = this._items[index];
+	            var clientX = event.clientX;
+	            var clientY = event.clientY;
+	            this.tabDetachRequested.emit({ index: index, item: item, clientX: clientX, clientY: clientY });
+	            if (data.dragAborted) {
+	                return;
+	            }
+	        }
+	        // Update the tab layout and computed target index.
+	        TabBarPrivate.layoutTabs(this._tabs, data, event);
 	    };
 	    /**
 	     * Handle the `'mouseup'` event for the tab bar.
@@ -10832,11 +10943,43 @@
 	        document.removeEventListener('mouseup', this, true);
 	        document.removeEventListener('keydown', this, true);
 	        document.removeEventListener('contextmenu', this, true);
-	        // End the drag operation.
-	        TabBarPrivate.endDrag(this, this._dragData, event, {
-	            clear: function () { _this._dragData = null; },
-	            move: function (i, j) { _this._moveTab(i, j); },
-	        });
+	        // Bail early if the drag is not active.
+	        var data = this._dragData;
+	        if (!data.dragActive) {
+	            this._dragData = null;
+	            return;
+	        }
+	        // Position the tab at its final resting position.
+	        TabBarPrivate.finalizeTabPosition(data);
+	        // Remove the dragging class from the tab so it can be transitioned.
+	        data.tab.classList.remove(DRAGGING_CLASS);
+	        // Complete the release on a timer to allow the tab to transition.
+	        setTimeout(function () {
+	            // Do nothing if the drag has been aborted.
+	            if (data.dragAborted) {
+	                return;
+	            }
+	            // Clear the drag data reference.
+	            _this._dragData = null;
+	            // Reset the positions of the tabs.
+	            TabBarPrivate.resetTabPositions(_this._tabs);
+	            // Clear the cursor grab and drag styles.
+	            data.override.dispose();
+	            _this.removeClass(DRAGGING_CLASS);
+	            // If the tab was not moved, there is nothing else to do.
+	            var i = data.index;
+	            var j = data.targetIndex;
+	            if (j === -1 || i === j) {
+	                return;
+	            }
+	            // Move the tab and related tab item to the new location.
+	            arrays.move(_this._tabs, i, j);
+	            arrays.move(_this._items, i, j);
+	            _this.contentNode.insertBefore(_this._tabs[j], _this._tabs[j + 1]);
+	            // Emit the tab moved signal and schedule a render update.
+	            _this.tabMoved.emit({ fromIndex: i, toIndex: j, item: _this._items[j] });
+	            _this.update();
+	        }, TRANSITION_DURATION);
 	    };
 	    /**
 	     * Release the mouse and restore the non-dragged tab positions.
@@ -10851,103 +10994,40 @@
 	        document.removeEventListener('mouseup', this, true);
 	        document.removeEventListener('keydown', this, true);
 	        document.removeEventListener('contextmenu', this, true);
-	        // Abort the drag operation and clear the drag data.
-	        TabBarPrivate.abortDrag(this, this._dragData);
+	        // Clear the drag data reference.
+	        var data = this._dragData;
 	        this._dragData = null;
-	    };
-	    /**
-	     * Move a tab from one index to another.
-	     */
-	    TabBar.prototype._moveTab = function (i, j) {
-	        var k = j < i ? j : j + 1;
-	        var content = this.contentNode;
-	        var children = content.children;
-	        arrays.move(this._titles, i, j);
-	        content.insertBefore(children[i], children[k]);
-	        this.tabMoved.emit({ fromIndex: i, toIndex: j });
-	        this.update();
+	        // Indicate the drag has been aborted. This allows the mouse
+	        // event handlers to return early when the drag is canceled.
+	        data.dragAborted = true;
+	        // If the drag is not active, there's nothing more to do.
+	        if (!data.dragActive) {
+	            return;
+	        }
+	        // Reset the tabs to their non-dragged positions.
+	        TabBarPrivate.resetTabPositions(this._tabs);
+	        // Clear the cursor override and extra styling classes.
+	        data.override.dispose();
+	        data.tab.classList.remove(DRAGGING_CLASS);
+	        this.removeClass(DRAGGING_CLASS);
 	    };
 	    /**
 	     * Handle the `changed` signal of a title object.
 	     */
 	    TabBar.prototype._onTitleChanged = function (sender) {
-	        this._dirty = true;
+	        this._dirtySet.add(sender);
 	        this.update();
 	    };
 	    return TabBar;
 	})(phosphor_widget_1.Widget);
 	exports.TabBar = TabBar;
 	/**
-	 * A struct which holds the drag data for a tab bar.
-	 */
-	var DragData = (function () {
-	    function DragData() {
-	        /**
-	         * The tab node being dragged.
-	         */
-	        this.tab = null;
-	        /**
-	         * The index of the tab being dragged.
-	         */
-	        this.tabIndex = -1;
-	        /**
-	         * The offset left of the tab being dragged.
-	         */
-	        this.tabLeft = -1;
-	        /**
-	         * The offset width of the tab being dragged.
-	         */
-	        this.tabWidth = -1;
-	        /**
-	         * The original mouse X position in tab coordinates.
-	         */
-	        this.tabPressX = -1;
-	        /**
-	         * The tab target index upon mouse release.
-	         */
-	        this.targetIndex = -1;
-	        /**
-	         * The array of tab layout objects snapped at drag start.
-	         */
-	        this.tabLayout = null;
-	        /**
-	         * The mouse press client X position.
-	         */
-	        this.pressX = -1;
-	        /**
-	         * The mouse press client Y position.
-	         */
-	        this.pressY = -1;
-	        /**
-	         * The bounding client rect of the tab bar content node.
-	         */
-	        this.contentRect = null;
-	        /**
-	         * The disposable to clean up the cursor override.
-	         */
-	        this.cursorGrab = null;
-	        /**
-	         * Whether the drag is currently active.
-	         */
-	        this.dragActive = false;
-	        /**
-	         * Whether the drag has been aborted.
-	         */
-	        this.dragAborted = false;
-	        /**
-	         * Whether a detach request as been made.
-	         */
-	        this.detachRequested = false;
-	    }
-	    return DragData;
-	})();
-	/**
 	 * The namespace for the `TabBar` class private data.
 	 */
 	var TabBarPrivate;
 	(function (TabBarPrivate) {
 	    /**
-	     * A signal emitted when the current title is changed.
+	     * A signal emitted when the current tab item is changed.
 	     */
 	    TabBarPrivate.currentChangedSignal = new phosphor_signaling_1.Signal();
 	    /**
@@ -10963,319 +11043,158 @@
 	     */
 	    TabBarPrivate.tabDetachRequestedSignal = new phosphor_signaling_1.Signal();
 	    /**
-	     * The property descriptor for the currently selected title.
+	     * A struct which holds the drag data for a tab bar.
 	     */
-	    TabBarPrivate.currentTitleProperty = new phosphor_properties_1.Property({
-	        name: 'currentTitle',
-	        value: null,
-	        coerce: coerceCurrentTitle,
-	        changed: onCurrentTitleChanged,
-	        notify: TabBarPrivate.currentChangedSignal,
-	    });
-	    /**
-	     * Get the close icon node for the tab at the specified index.
-	     */
-	    function closeIconNode(owner, index) {
-	        return owner.contentNode.children[index].lastChild;
-	    }
-	    TabBarPrivate.closeIconNode = closeIconNode;
-	    /**
-	     * Get the index of the tab node at a client position, or `-1`.
-	     */
-	    function hitTestTabs(owner, x, y) {
-	        var nodes = owner.contentNode.children;
-	        for (var i = 0, n = nodes.length; i < n; ++i) {
-	            if (phosphor_domutil_1.hitTest(nodes[i], x, y))
-	                return i;
+	    var DragData = (function () {
+	        function DragData() {
+	            /**
+	             * The tab node being dragged.
+	             */
+	            this.tab = null;
+	            /**
+	             * The index of the tab being dragged.
+	             */
+	            this.index = -1;
+	            /**
+	             * The offset left of the tab being dragged.
+	             */
+	            this.tabLeft = -1;
+	            /**
+	             * The offset width of the tab being dragged.
+	             */
+	            this.tabWidth = -1;
+	            /**
+	             * The original mouse X position in tab coordinates.
+	             */
+	            this.tabPressX = -1;
+	            /**
+	             * The tab target index upon mouse release.
+	             */
+	            this.targetIndex = -1;
+	            /**
+	             * The array of tab layout objects snapped at drag start.
+	             */
+	            this.tabLayout = null;
+	            /**
+	             * The mouse press client X position.
+	             */
+	            this.pressX = -1;
+	            /**
+	             * The mouse press client Y position.
+	             */
+	            this.pressY = -1;
+	            /**
+	             * The bounding client rect of the tab bar content node.
+	             */
+	            this.contentRect = null;
+	            /**
+	             * The disposable to clean up the cursor override.
+	             */
+	            this.override = null;
+	            /**
+	             * Whether the drag is currently active.
+	             */
+	            this.dragActive = false;
+	            /**
+	             * Whether the drag has been aborted.
+	             */
+	            this.dragAborted = false;
+	            /**
+	             * Whether a detach request as been made.
+	             */
+	            this.detachRequested = false;
 	        }
-	        return -1;
-	    }
-	    TabBarPrivate.hitTestTabs = hitTestTabs;
-	    /**
-	     * Update the tab bar tabs to match the current titles.
-	     *
-	     * This is a full update which also updates the tab Z order.
-	     */
-	    function updateTabs(owner) {
-	        var count = owner.titleCount();
-	        var content = owner.contentNode;
-	        var children = content.children;
-	        var current = owner.currentTitle;
-	        while (children.length > count) {
-	            content.removeChild(content.lastChild);
-	        }
-	        while (children.length < count) {
-	            content.appendChild(createTabNode());
-	        }
-	        for (var i = 0; i < count; ++i) {
-	            var node = children[i];
-	            updateTabNode(node, owner.titleAt(i));
-	        }
-	        updateZOrder(owner);
-	    }
-	    TabBarPrivate.updateTabs = updateTabs;
-	    /**
-	     * Update the Z order of the tabs to match the current titles.
-	     *
-	     * This is a partial update which updates the Z order and the current
-	     * tab class. It assumes the tab count is the same as the title count.
-	     */
-	    function updateZOrder(owner) {
-	        var count = owner.titleCount();
-	        var content = owner.contentNode;
-	        var children = content.children;
-	        var current = owner.currentTitle;
-	        for (var i = 0; i < count; ++i) {
-	            var node = children[i];
-	            if (owner.titleAt(i) === current) {
-	                node.classList.add(CURRENT_CLASS);
-	                node.style.zIndex = count + '';
-	            }
-	            else {
-	                node.classList.remove(CURRENT_CLASS);
-	                node.style.zIndex = count - i - 1 + '';
-	            }
-	        }
-	    }
-	    TabBarPrivate.updateZOrder = updateZOrder;
-	    /**
-	     * Initialize a new drag data object for a tab bar.
-	     *
-	     * This should be called on 'mousedown' event.
-	     */
-	    function initDrag(tabIndex, event) {
-	        var data = new DragData();
-	        data.tabIndex = tabIndex;
-	        data.pressX = event.clientX;
-	        data.pressY = event.clientY;
-	        return data;
-	    }
-	    TabBarPrivate.initDrag = initDrag;
-	    /**
-	     * Update the drag positions of the tabs for a tab bar.
-	     *
-	     * This should be called on a `'mousemove'` event.
-	     */
-	    function moveDrag(owner, data, event) {
-	        // Ensure the drag threshold is exceeded before moving the tab.
-	        if (!data.dragActive) {
-	            var dx = Math.abs(event.clientX - data.pressX);
-	            var dy = Math.abs(event.clientY - data.pressY);
-	            if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
-	                return;
-	            }
-	            // Fill in the missing drag data measurements.
-	            var content = owner.contentNode;
-	            var tab = content.children[data.tabIndex];
-	            var tabRect = tab.getBoundingClientRect();
-	            data.tab = tab;
-	            data.tabLeft = tab.offsetLeft;
-	            data.tabWidth = tabRect.width;
-	            data.tabPressX = data.pressX - tabRect.left;
-	            data.contentRect = content.getBoundingClientRect();
-	            data.tabLayout = snapTabLayout(owner);
-	            data.cursorGrab = phosphor_domutil_1.overrideCursor('default');
-	            // Style the tab bar and tab for relative position dragging.
-	            tab.classList.add(DRAGGING_CLASS);
-	            owner.addClass(DRAGGING_CLASS);
-	            data.dragActive = true;
-	        }
-	        // Emit the detach request signal if the threshold is exceeded.
-	        if (!data.detachRequested && detachExceeded(data.contentRect, event)) {
-	            var node = data.tab;
-	            var clientX = event.clientX;
-	            var clientY = event.clientY;
-	            var title = owner.titleAt(data.tabIndex);
-	            owner.tabDetachRequested.emit({ title: title, node: node, clientX: clientX, clientY: clientY });
-	            data.detachRequested = true;
-	            if (data.dragAborted) {
-	                return;
-	            }
-	        }
-	        // Compute the target bounds of the drag tab.
-	        var offsetLeft = event.clientX - data.contentRect.left;
-	        var targetLeft = offsetLeft - data.tabPressX;
-	        var targetRight = targetLeft + data.tabWidth;
-	        // Reset the target tab index.
-	        data.targetIndex = data.tabIndex;
-	        // Update the non-drag tab positions and the tab target index.
-	        var tabs = owner.contentNode.children;
-	        for (var i = 0, n = tabs.length; i < n; ++i) {
-	            var layout = data.tabLayout[i];
-	            var style = tabs[i].style;
-	            var threshold = layout.left + (layout.width >> 1);
-	            if (i < data.tabIndex && targetLeft < threshold) {
-	                style.left = data.tabWidth + data.tabLayout[i + 1].margin + 'px';
-	                data.targetIndex = Math.min(data.targetIndex, i);
-	            }
-	            else if (i > data.tabIndex && targetRight > threshold) {
-	                style.left = -data.tabWidth - layout.margin + 'px';
-	                data.targetIndex = i;
-	            }
-	            else if (i !== data.tabIndex) {
-	                style.left = '';
-	            }
-	        }
-	        // Update the drag tab position.
-	        var idealLeft = event.clientX - data.pressX;
-	        var maxLeft = data.contentRect.width - (data.tabLeft + data.tabWidth);
-	        var adjustedLeft = Math.max(-data.tabLeft, Math.min(idealLeft, maxLeft));
-	        data.tab.style.left = adjustedLeft + 'px';
-	    }
-	    TabBarPrivate.moveDrag = moveDrag;
-	    /**
-	     * End the drag operation for a tab bar.
-	     *
-	     * This should be called on a `'mouseup'` event.
-	     */
-	    function endDrag(owner, data, event, handler) {
-	        // Bail early if the drag is not active.
-	        if (!data.dragActive) {
-	            handler.clear();
-	            return;
-	        }
-	        // Compute the approximate final relative tab offset.
-	        var idealLeft;
-	        if (data.targetIndex === data.tabIndex) {
-	            idealLeft = 0;
-	        }
-	        else if (data.targetIndex > data.tabIndex) {
-	            var tl = data.tabLayout[data.targetIndex];
-	            idealLeft = tl.left + tl.width - data.tabWidth - data.tabLeft;
-	        }
-	        else {
-	            var tl = data.tabLayout[data.targetIndex];
-	            idealLeft = tl.left - data.tabLeft;
-	        }
-	        // Position the tab to its final position, subject to limits.
-	        var maxLeft = data.contentRect.width - (data.tabLeft + data.tabWidth);
-	        var adjustedLeft = Math.max(-data.tabLeft, Math.min(idealLeft, maxLeft));
-	        data.tab.style.left = adjustedLeft + 'px';
-	        // Remove the dragging class from the tab so it can be transitioned.
-	        data.tab.classList.remove(DRAGGING_CLASS);
-	        // Complete the release on a timer to allow the tab to transition.
-	        setTimeout(function () {
-	            // Do nothing if the drag has been aborted.
-	            if (data.dragAborted) {
-	                return;
-	            }
-	            // Clear the drag data reference.
-	            handler.clear();
-	            // Reset the positions of the tabs.
-	            resetTabPositions(owner);
-	            // Clear the cursor grab and drag styles.
-	            data.cursorGrab.dispose();
-	            owner.removeClass(DRAGGING_CLASS);
-	            // Finally, move the tab to its new location.
-	            if (data.targetIndex !== -1 && data.tabIndex !== data.targetIndex) {
-	                handler.move(data.tabIndex, data.targetIndex);
-	            }
-	        }, TRANSITION_DURATION);
-	    }
-	    TabBarPrivate.endDrag = endDrag;
-	    /**
-	     * Abort the drag operation for a tab bar.
-	     *
-	     * This should be called to cancel a drag immediately.
-	     */
-	    function abortDrag(owner, data) {
-	        // Indicate the drag has been aborted, which allows the drag
-	        // end handler and detach request emitter to return early.
-	        data.dragAborted = true;
-	        // If the drag is not active, there's nothing more to do.
-	        if (!data.dragActive) {
-	            return;
-	        }
-	        // Reset the tabs to their non-dragged positions.
-	        resetTabPositions(owner);
-	        // Clear the cursor override and extra styling classes.
-	        data.cursorGrab.dispose();
-	        data.tab.classList.remove(DRAGGING_CLASS);
-	        owner.removeClass(DRAGGING_CLASS);
-	    }
-	    TabBarPrivate.abortDrag = abortDrag;
-	    /**
-	     * The coerce handler for the `currentTitle` property.
-	     */
-	    function coerceCurrentTitle(owner, value) {
-	        return (value && owner.titleIndex(value) !== -1) ? value : null;
-	    }
-	    /**
-	     * The change handler for the `currentTitle` property.
-	     */
-	    function onCurrentTitleChanged(owner) {
-	        owner.update();
-	    }
-	    /**
-	     * Create an uninitialized DOM node for a tab.
-	     */
-	    function createTabNode() {
-	        var node = document.createElement('li');
-	        var icon = document.createElement('span');
-	        var text = document.createElement('span');
-	        var close = document.createElement('span');
-	        text.className = TEXT_CLASS;
-	        close.className = CLOSE_CLASS;
-	        node.appendChild(icon);
-	        node.appendChild(text);
-	        node.appendChild(close);
-	        return node;
-	    }
-	    /**
-	     * Update a tab node to reflect the state of a title.
-	     */
-	    function updateTabNode(node, title) {
-	        var icon = node.firstChild;
-	        var text = icon.nextSibling;
-	        var suffix = title.closable ? ' ' + CLOSABLE_CLASS : '';
-	        if (title.className) {
-	            node.className = TAB_CLASS + ' ' + title.className + suffix;
-	        }
-	        else {
-	            node.className = TAB_CLASS + suffix;
-	        }
-	        if (title.icon) {
-	            icon.className = ICON_CLASS + ' ' + title.icon;
-	        }
-	        else {
-	            icon.className = ICON_CLASS;
-	        }
-	        text.textContent = title.text;
-	    }
-	    /**
-	     * Reset the tabs to their unadjusted positions.
-	     */
-	    function resetTabPositions(owner) {
-	        var children = owner.contentNode.children;
-	        for (var i = 0, n = children.length; i < n; ++i) {
-	            children[i].style.left = '';
-	        }
-	    }
+	        return DragData;
+	    })();
+	    TabBarPrivate.DragData = DragData;
 	    /**
 	     * Get a snapshot of the current tab layout values.
 	     */
-	    function snapTabLayout(owner) {
-	        var layout = [];
-	        var children = owner.contentNode.children;
-	        for (var i = 0, n = children.length; i < n; ++i) {
-	            var node = children[i];
+	    function snapTabLayout(tabs) {
+	        var layout = new Array(tabs.length);
+	        for (var i = 0, n = tabs.length; i < n; ++i) {
+	            var node = tabs[i];
 	            var left = node.offsetLeft;
 	            var width = node.offsetWidth;
 	            var cstyle = window.getComputedStyle(node);
 	            var margin = parseInt(cstyle.marginLeft, 10) || 0;
-	            layout.push({ margin: margin, left: left, width: width });
+	            layout[i] = { margin: margin, left: left, width: width };
 	        }
 	        return layout;
 	    }
+	    TabBarPrivate.snapTabLayout = snapTabLayout;
 	    /**
-	     * Test if a mouse position exceeds the detach threshold.
+	     * Test if the event exceeds the drag detach threshold.
 	     */
-	    function detachExceeded(rect, event) {
+	    function detachExceeded(data, event) {
+	        var rect = data.contentRect;
 	        return ((event.clientX < rect.left - DETACH_THRESHOLD) ||
 	            (event.clientX >= rect.right + DETACH_THRESHOLD) ||
 	            (event.clientY < rect.top - DETACH_THRESHOLD) ||
 	            (event.clientY >= rect.bottom + DETACH_THRESHOLD));
 	    }
+	    TabBarPrivate.detachExceeded = detachExceeded;
+	    /**
+	     * Update the relative tab positions and computed target index.
+	     */
+	    function layoutTabs(tabs, data, event) {
+	        var targetIndex = data.index;
+	        var targetLeft = event.clientX - data.contentRect.left - data.tabPressX;
+	        var targetRight = targetLeft + data.tabWidth;
+	        for (var i = 0, n = tabs.length; i < n; ++i) {
+	            var style = tabs[i].style;
+	            var layout = data.tabLayout[i];
+	            var threshold = layout.left + (layout.width >> 1);
+	            if (i < data.index && targetLeft < threshold) {
+	                style.left = data.tabWidth + data.tabLayout[i + 1].margin + 'px';
+	                targetIndex = Math.min(targetIndex, i);
+	            }
+	            else if (i > data.index && targetRight > threshold) {
+	                style.left = -data.tabWidth - layout.margin + 'px';
+	                targetIndex = Math.max(targetIndex, i);
+	            }
+	            else if (i === data.index) {
+	                var ideal = event.clientX - data.pressX;
+	                var limit = data.contentRect.width - (data.tabLeft + data.tabWidth);
+	                style.left = Math.max(-data.tabLeft, Math.min(ideal, limit)) + 'px';
+	            }
+	            else {
+	                style.left = '';
+	            }
+	        }
+	        data.targetIndex = targetIndex;
+	    }
+	    TabBarPrivate.layoutTabs = layoutTabs;
+	    /**
+	     * Position the drag tab at its final resting relative position.
+	     */
+	    function finalizeTabPosition(data) {
+	        var ideal;
+	        if (data.targetIndex === data.index) {
+	            ideal = 0;
+	        }
+	        else if (data.targetIndex > data.index) {
+	            var tgt = data.tabLayout[data.targetIndex];
+	            ideal = tgt.left + tgt.width - data.tabWidth - data.tabLeft;
+	        }
+	        else {
+	            var tgt = data.tabLayout[data.targetIndex];
+	            ideal = tgt.left - data.tabLeft;
+	        }
+	        var style = data.tab.style;
+	        var limit = data.contentRect.width - (data.tabLeft + data.tabWidth);
+	        style.left = Math.max(-data.tabLeft, Math.min(ideal, limit)) + 'px';
+	    }
+	    TabBarPrivate.finalizeTabPosition = finalizeTabPosition;
+	    /**
+	     * Reset the relative positions of the given tabs.
+	     */
+	    function resetTabPositions(tabs) {
+	        for (var i = 0, n = tabs.length; i < n; ++i) {
+	            tabs[i].style.left = '';
+	        }
+	    }
+	    TabBarPrivate.resetTabPositions = resetTabPositions;
 	})(TabBarPrivate || (TabBarPrivate = {}));
 
 
@@ -11300,11 +11219,18 @@
 	var phosphor_stackedpanel_1 = __webpack_require__(41);
 	var phosphor_widget_1 = __webpack_require__(24);
 	var tabbar_1 = __webpack_require__(45);
-	// TODO - need better solution for storing these class names
 	/**
 	 * The class name added to TabPanel instances.
 	 */
 	var TAB_PANEL_CLASS = 'p-TabPanel';
+	/**
+	 * The class name added to a TabPanel's tab bar.
+	 */
+	var TAB_BAR_CLASS = 'p-TabPanel-tabBar';
+	/**
+	 * The class name added to a TabPanel's stacked panel.
+	 */
+	var STACKED_PANEL_CLASS = 'p-TabPanel-stackedPanel';
 	/**
 	 * A widget which combines a `TabBar` and a `StackedPanel`.
 	 *
@@ -11323,19 +11249,19 @@
 	     */
 	    function TabPanel() {
 	        _super.call(this);
+	        this._currentWidget = null;
 	        this.addClass(TAB_PANEL_CLASS);
-	        var type = this.constructor;
-	        this._tabBar = type.createTabBar();
-	        this._stackedPanel = type.createStackedPanel();
-	        this._tabBar.tabMoved.connect(this.onTabMoved, this);
-	        this._tabBar.currentChanged.connect(this.onCurrentChanged, this);
-	        this._tabBar.tabCloseRequested.connect(this.onTabCloseRequested, this);
-	        this._stackedPanel.widgetRemoved.connect(this.onWidgetRemoved, this);
-	        phosphor_boxpanel_1.BoxLayout.setStretch(this._tabBar, 0);
-	        phosphor_boxpanel_1.BoxLayout.setStretch(this._stackedPanel, 1);
+	        this._tabBar = this.constructor.createTabBar();
+	        this._stackedPanel = this.constructor.createStackedPanel();
+	        this._tabBar.tabMoved.connect(this._onTabMoved, this);
+	        this._tabBar.currentChanged.connect(this._onCurrentChanged, this);
+	        this._tabBar.tabCloseRequested.connect(this._onTabCloseRequested, this);
+	        this._stackedPanel.widgetRemoved.connect(this._onWidgetRemoved, this);
 	        var layout = new phosphor_boxpanel_1.BoxLayout();
 	        layout.direction = phosphor_boxpanel_1.BoxLayout.TopToBottom;
 	        layout.spacing = 0;
+	        phosphor_boxpanel_1.BoxLayout.setStretch(this._tabBar, 0);
+	        phosphor_boxpanel_1.BoxLayout.setStretch(this._stackedPanel, 1);
 	        layout.addChild(this._tabBar);
 	        layout.addChild(this._stackedPanel);
 	        this.layout = layout;
@@ -11343,24 +11269,28 @@
 	    /**
 	     * Create a `TabBar` for a tab panel.
 	     *
-	     * @returns The tab bar to use with a new tab panel.
+	     * @returns A new tab bar to use with a tab panel.
 	     *
 	     * #### Notes
-	     * This may be reimplemented by a subclass as needed.
+	     * This may be reimplemented by subclasses for custom tab bars.
 	     */
 	    TabPanel.createTabBar = function () {
-	        return new tabbar_1.TabBar();
+	        var tabBar = new tabbar_1.TabBar();
+	        tabBar.addClass(TAB_BAR_CLASS);
+	        return tabBar;
 	    };
 	    /**
 	     * Create a `StackedPanel` for a tab panel.
 	     *
-	     * @returns The stacked panel to use with a new tab panel.
+	     * @returns A new stacked panel to use with a tab panel.
 	     *
 	     * #### Notes
-	     * This may be reimplemented by a subclass as needed.
+	     * This may be reimplemented by subclasses for custom stacks.
 	     */
 	    TabPanel.createStackedPanel = function () {
-	        return new phosphor_stackedpanel_1.StackedPanel();
+	        var stackedPanel = new phosphor_stackedpanel_1.StackedPanel();
+	        stackedPanel.addClass(STACKED_PANEL_CLASS);
+	        return stackedPanel;
 	    };
 	    /**
 	     * Dispose of the resources held by the widget.
@@ -11368,6 +11298,7 @@
 	    TabPanel.prototype.dispose = function () {
 	        this._tabBar = null;
 	        this._stackedPanel = null;
+	        this._currentWidget = null;
 	        _super.prototype.dispose.call(this);
 	    };
 	    Object.defineProperty(TabPanel.prototype, "currentWidget", {
@@ -11375,13 +11306,13 @@
 	         * Get the currently selected widget.
 	         */
 	        get: function () {
-	            return this._stackedPanel.currentWidget;
+	            return this._tabBar.currentItem;
 	        },
 	        /**
 	         * Set the currently selected widget.
 	         */
-	        set: function (widget) {
-	            this._tabBar.currentTitle = widget && widget.title;
+	        set: function (value) {
+	            this._tabBar.currentItem = value;
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -11396,8 +11327,8 @@
 	        /**
 	         * Set whether the tabs are movable by the user.
 	         */
-	        set: function (movable) {
-	            this._tabBar.tabsMovable = movable;
+	        set: function (value) {
+	            this._tabBar.tabsMovable = value;
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -11407,7 +11338,7 @@
 	         * Get the tab bar associated with the tab panel.
 	         *
 	         * #### Notes
-	         * Modifying the tab bar titles can lead to undefined behavior.
+	         * Modifying the tab bar directly can lead to undefined behavior.
 	         *
 	         * This is a read-only property.
 	         */
@@ -11422,7 +11353,7 @@
 	         * Get the stacked panel associated with the tab panel.
 	         *
 	         * #### Notes
-	         * Modifying the panel children can lead to undefined behavior.
+	         * Modifying the stack directly can lead to undefined behavior.
 	         *
 	         * This is a read-only property.
 	         */
@@ -11438,7 +11369,7 @@
 	     * @returns The number of child widgets in the tab panel.
 	     *
 	     * #### Notes
-	     * This delegates to `childCount` of the internal stacked panel.
+	     * This delegates to the `childCount` method of the stacked panel.
 	     */
 	    TabPanel.prototype.childCount = function () {
 	        return this._stackedPanel.childCount();
@@ -11451,7 +11382,7 @@
 	     * @returns The child at the specified index, or `undefined`.
 	     *
 	     * #### Notes
-	     * This delegates to `childAt` of the internal stacked panel.
+	     * This delegates to the `childAt` method of the stacked panel.
 	     */
 	    TabPanel.prototype.childAt = function (index) {
 	        return this._stackedPanel.childAt(index);
@@ -11464,7 +11395,7 @@
 	     * @returns The index of the specified child, or `-1`.
 	     *
 	     * #### Notes
-	     * This delegates to `childIndex` of the internal stacked panel.
+	     * This delegates to the `childIndex` method of the stacked panel.
 	     */
 	    TabPanel.prototype.childIndex = function (child) {
 	        return this._stackedPanel.childIndex(child);
@@ -11476,13 +11407,9 @@
 	     *
 	     * #### Notes
 	     * If the child is already contained in the panel, it will be moved.
-	     *
-	     * This adds the widget's title object to the internal tab bar, and
-	     * adds the widget itself to the internal stacked panel.
 	     */
 	    TabPanel.prototype.addChild = function (child) {
-	        this._stackedPanel.addChild(child);
-	        this._tabBar.addTitle(child.title);
+	        this.insertChild(this.childCount(), child);
 	    };
 	    /**
 	     * Insert a child widget at the specified index.
@@ -11493,69 +11420,46 @@
 	     *
 	     * #### Notes
 	     * If the child is already contained in the panel, it will be moved.
-	     *
-	     * This adds the widget's title object to the internal tab bar, and
-	     * adds the widget itself to the internal stacked panel.
 	     */
 	    TabPanel.prototype.insertChild = function (index, child) {
+	        if (child !== this._currentWidget)
+	            child.hide();
 	        this._stackedPanel.insertChild(index, child);
-	        this._tabBar.insertTitle(index, child.title);
-	    };
-	    /**
-	     * Find the widget which owns the given title.
-	     *
-	     * @param title - The title object of interest.
-	     *
-	     * @returns The widget which owns the title, or `null` if no such
-	     *   widget is contained within the internal stacked panel.
-	     */
-	    TabPanel.prototype.findWidgetByTitle = function (title) {
-	        var panel = this._stackedPanel;
-	        for (var i = 0, n = panel.childCount(); i < n; ++i) {
-	            var child = panel.childAt(i);
-	            if (child.title === title)
-	                return child;
-	        }
-	        return null;
+	        this._tabBar.insertItem(index, child);
 	    };
 	    /**
 	     * Handle the `currentChanged` signal from the tab bar.
-	     *
-	     * #### Notes
-	     * The default implementation updates the current stack widget.
 	     */
-	    TabPanel.prototype.onCurrentChanged = function (sender, args) {
-	        this._stackedPanel.currentWidget = this.findWidgetByTitle(args.newValue);
-	    };
-	    /**
-	     * Handle the `tabMoved` signal from the tab bar.
-	     *
-	     * #### Notes
-	     * The default implementation moves the widget in the stack.
-	     */
-	    TabPanel.prototype.onTabMoved = function (sender, args) {
-	        var child = this._stackedPanel.childAt(args.fromIndex);
-	        this._stackedPanel.insertChild(args.toIndex, child);
+	    TabPanel.prototype._onCurrentChanged = function (sender, args) {
+	        var oldWidget = this._currentWidget;
+	        var newWidget = args.item;
+	        if (oldWidget === newWidget)
+	            return;
+	        this._currentWidget = newWidget;
+	        if (oldWidget)
+	            oldWidget.hide();
+	        if (newWidget)
+	            newWidget.show();
 	    };
 	    /**
 	     * Handle the `tabCloseRequested` signal from the tab bar.
-	     *
-	     * #### Notes
-	     * The default implementation closes the respective widget.
 	     */
-	    TabPanel.prototype.onTabCloseRequested = function (sender, title) {
-	        var widget = this.findWidgetByTitle(title);
-	        if (widget)
-	            widget.close();
+	    TabPanel.prototype._onTabCloseRequested = function (sender, args) {
+	        args.item.close();
+	    };
+	    /**
+	     * Handle the `tabMoved` signal from the tab bar.
+	     */
+	    TabPanel.prototype._onTabMoved = function (sender, args) {
+	        this._stackedPanel.insertChild(args.toIndex, args.item);
 	    };
 	    /**
 	     * Handle the `widgetRemoved` signal from the stacked panel.
-	     *
-	     * #### Notes
-	     * The default implementation removes the title from the tab bar.
 	     */
-	    TabPanel.prototype.onWidgetRemoved = function (sender, widget) {
-	        this._tabBar.removeTitle(widget.title);
+	    TabPanel.prototype._onWidgetRemoved = function (sender, widget) {
+	        if (this._currentWidget === widget)
+	            this._currentWidget = null;
+	        this._tabBar.removeItem(widget);
 	    };
 	    return TabPanel;
 	})(phosphor_widget_1.Widget);
@@ -11597,7 +11501,7 @@
 
 
 	// module
-	exports.push([module.id, "/*-----------------------------------------------------------------------------\r\n| Copyright (c) 2014-2015, PhosphorJS Contributors\r\n|\r\n| Distributed under the terms of the BSD 3-Clause License.\r\n|\r\n| The full license is in the file LICENSE, distributed with this software.\r\n|----------------------------------------------------------------------------*/\r\n.p-TabBar {\r\n  position: relative;\r\n  z-index: 0;\r\n}\r\n\r\n\r\n.p-TabBar-header {\r\n  display: none;\r\n  position: absolute;\r\n  top: 0;\r\n  left: 0;\r\n  right: 0;\r\n  z-index: 0;\r\n}\r\n\r\n\r\n.p-TabBar-body {\r\n  position: absolute;\r\n  top: 0;\r\n  left: 0;\r\n  right: 0;\r\n  bottom: 0;\r\n  z-index: 2;\r\n}\r\n\r\n\r\n.p-TabBar-footer {\r\n  display: none;\r\n  position: absolute;\r\n  left: 0;\r\n  right: 0;\r\n  bottom: 0;\r\n  z-index: 1;\r\n}\r\n\r\n\r\n.p-TabBar-content {\r\n  margin: 0;\r\n  padding: 0;\r\n  height: 100%;\r\n  display: flex;\r\n  flex-direction: row;\r\n  list-style-type: none;\r\n}\r\n\r\n\r\n.p-TabBar-tab {\r\n  display: flex;\r\n  flex-direction: row;\r\n  box-sizing: border-box;\r\n  overflow: hidden;\r\n}\r\n\r\n\r\n.p-TabBar-tab-icon,\r\n.p-TabBar-tab-close {\r\n  flex: 0 0 auto;\r\n}\r\n\r\n\r\n.p-TabBar-tab-text {\r\n  flex: 1 1 auto;\r\n  overflow: hidden;\r\n  white-space: nowrap;\r\n}\r\n\r\n\r\n.p-TabBar.p-mod-dragging .p-TabBar-tab {\r\n  position: relative;\r\n  left: 0;\r\n  transition: left 150ms ease;\r\n}\r\n\r\n\r\n.p-TabBar.p-mod-dragging .p-TabBar-tab.p-mod-dragging {\r\n  transition: none;\r\n}\r\n\r\n\r\n.p-TabPanel {\r\n  position: relative;\r\n  z-index: 0;\r\n}\r\n\r\n\r\n.p-TabPanel > .p-Widget {\r\n  position: absolute;\r\n}\r\n\r\n\r\n.p-TabPanel > .p-TabBar {\r\n  z-index: 1;\r\n}\r\n\r\n\r\n.p-TabPanel > .p-StackedPanel {\r\n  z-index: 0;\r\n}\r\n", ""]);
+	exports.push([module.id, "/*-----------------------------------------------------------------------------\r\n| Copyright (c) 2014-2015, PhosphorJS Contributors\r\n|\r\n| Distributed under the terms of the BSD 3-Clause License.\r\n|\r\n| The full license is in the file LICENSE, distributed with this software.\r\n|----------------------------------------------------------------------------*/\r\n.p-TabBar {\r\n  display: flex;\r\n  flex-direction: column;\r\n}\r\n\r\n\r\n.p-TabBar-header,\r\n.p-TabBar-footer {\r\n  flex: 0 0 auto;\r\n}\r\n\r\n\r\n.p-TabBar-body {\r\n  display: flex;\r\n  flex-direction: row;\r\n  flex: 1 1 auto;\r\n}\r\n\r\n\r\n.p-TabBar-content {\r\n  display: flex;\r\n  flex-direction: row;\r\n  flex: 1 1 auto;\r\n  margin: 0;\r\n  padding: 0;\r\n  list-style-type: none;\r\n}\r\n\r\n\r\n.p-TabBar-tab {\r\n  display: flex;\r\n  flex-direction: row;\r\n  box-sizing: border-box;\r\n  overflow: hidden;\r\n}\r\n\r\n\r\n.p-TabBar-tabIcon,\r\n.p-TabBar-tabCloseIcon {\r\n  flex: 0 0 auto;\r\n}\r\n\r\n\r\n.p-TabBar-tabText {\r\n  flex: 1 1 auto;\r\n  overflow: hidden;\r\n  white-space: nowrap;\r\n}\r\n\r\n\r\n.p-TabBar.p-mod-dragging .p-TabBar-tab {\r\n  position: relative;\r\n  left: 0;\r\n  transition: left 150ms ease; /* keep in sync with JS */\r\n}\r\n\r\n\r\n.p-TabBar.p-mod-dragging .p-TabBar-tab.p-mod-dragging {\r\n  transition: none;\r\n}\r\n\r\n\r\n.p-TabPanel-tabBar {\r\n  z-index: 1;\r\n}\r\n\r\n\r\n.p-TabPanel-stackedPanel {\r\n  z-index: 0;\r\n}\r\n", ""]);
 
 	// exports
 
