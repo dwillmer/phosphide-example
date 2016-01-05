@@ -14,6 +14,8 @@ var di = require('phosphor-di');
 function main() {
    phosphide.loadPlugins(new di.Container(), [
     require('phosphide/lib/appshell/plugin'),
+    require('phosphide/lib/commandregistry/plugin'),
+    require('phosphide/lib/commandpalette/plugin'),
     require('red'),
     require('blue'),
     require('green'),
@@ -25,4 +27,3 @@ function main() {
 }
 
 window.onload = main;
-
