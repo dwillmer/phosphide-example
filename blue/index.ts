@@ -54,7 +54,7 @@ class BlueHandler {
       {
         id: 'demo:blue',
         command: new DelegateCommand(() => {
-          console.log('Blue Command Called');
+          console.log('Blue Command invoked');
         })
       }
     ];

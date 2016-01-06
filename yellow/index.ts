@@ -54,7 +54,7 @@ class YellowHandler {
       {
         id: 'demo:yellow',
         command: new DelegateCommand(() => {
-          console.log('Yellow Command Called');
+          console.log('Yellow Command invoked');
         })
       }
     ];

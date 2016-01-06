@@ -54,7 +54,7 @@ class RedHandler {
       {
         id: 'demo:red',
         command: new DelegateCommand(() => {
-          console.log('Red Command Called');
+          console.log('Red Command invoked');
         })
       }
     ];

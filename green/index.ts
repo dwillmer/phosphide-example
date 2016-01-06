@@ -54,7 +54,7 @@ class GreenHandler {
       {
         id: 'demo:green',
         command: new DelegateCommand(() => {
-          console.log('Green Command Called');
+          console.log('Green Command invoked');
         })
       }
     ];
