@@ -8,8 +8,12 @@
 'use strict';
 
 import {
-  IAppShell
+  IAppShell, ICommandRegistry
 } from 'phosphide';
+
+import {
+  DelegateCommand
+} from 'phosphor-command';
 
 import {
   Container
@@ -22,13 +26,15 @@ import {
 
 export
 function resolve(container: Container): Promise<void> {
-  return container.resolve(YellowHandler).then(handler => { handler.run(); });
+  return container.resolve(YellowHandler).then(handler => {
+    handler.run(container);
+  });
 }
 
 
 class YellowHandler {
 
-  static requires = [IAppShell];
+  static requires = [IAppShell, ICommandRegistry];
 
   static create(shell: IAppShell): YellowHandler {
     return new YellowHandler(shell);
@@ -38,11 +44,23 @@ class YellowHandler {
     this._shell = shell;
   }
 
-  run(): void {
+  run(container: Container): void {
     let widget = new Widget();
     widget.addClass('yellow-content');
     widget.title.text = 'Yellow';
     this._shell.addToLeftArea(widget, { rank: 20 });
+
+    let commands = [
+      {
+        id: 'demo:yellow',
+        command: new DelegateCommand(() => {
+          console.log('Yellow Command Called');
+        })
+      }
+    ];
+    container.resolve(ICommandRegistry).then(reg => {
+      reg.add(commands);
+    });
   }
 
   private _shell: IAppShell;
