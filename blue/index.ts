@@ -27,7 +27,7 @@ import {
 export
 function resolve(container: Container): Promise<void> {
   return container.resolve(BlueHandler).then(handler => {
-    handler.run(container);
+    handler.run();
   });
 }
 
@@ -36,15 +36,16 @@ class BlueHandler {
 
   static requires = [IAppShell, ICommandRegistry];
 
-  static create(shell: IAppShell): BlueHandler {
-    return new BlueHandler(shell);
+  static create(shell: IAppShell, commands: ICommandRegistry): BlueHandler {
+    return new BlueHandler(shell, commands);
   }
 
-  constructor(shell: IAppShell) {
+  constructor(shell: IAppShell, commands: ICommandRegistry) {
     this._shell = shell;
+    this._commandRegistry = commands;
   }
 
-  run(container: Container): void {
+  run(): void {
     let widget = new Widget();
     widget.addClass('blue-content');
     widget.title.text = 'Blue';
@@ -58,10 +59,9 @@ class BlueHandler {
         })
       }
     ];
-    container.resolve(ICommandRegistry).then(reg => {
-      reg.add(commands);
-    });
+    this._commandRegistry.add(commands);
   }
 
   private _shell: IAppShell;
+  private _commandRegistry: ICommandRegistry;
 }

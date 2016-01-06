@@ -27,7 +27,7 @@ import {
 export
 function resolve(container: Container): Promise<void> {
   return container.resolve(YellowHandler).then(handler => {
-    handler.run(container);
+    handler.run();
   });
 }
 
@@ -36,15 +36,16 @@ class YellowHandler {
 
   static requires = [IAppShell, ICommandRegistry];
 
-  static create(shell: IAppShell): YellowHandler {
-    return new YellowHandler(shell);
+  static create(shell: IAppShell, commands: ICommandRegistry): YellowHandler {
+    return new YellowHandler(shell, commands);
   }
 
-  constructor(shell: IAppShell) {
+  constructor(shell: IAppShell, commands: ICommandRegistry) {
     this._shell = shell;
+    this._commandRegistry = commands;
   }
 
-  run(container: Container): void {
+  run(): void {
     let widget = new Widget();
     widget.addClass('yellow-content');
     widget.title.text = 'Yellow';
@@ -58,10 +59,9 @@ class YellowHandler {
         })
       }
     ];
-    container.resolve(ICommandRegistry).then(reg => {
-      reg.add(commands);
-    });
+    this._commandRegistry.add(commands);
   }
 
   private _shell: IAppShell;
+  private _commandRegistry: ICommandRegistry;
 }
