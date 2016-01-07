@@ -7,6 +7,7 @@ module.exports = {
   resolve: {
     root: __dirname
   },
+  bail: true,
   module: {
     loaders: [
       { test: /\.css$/, loader: 'style-loader!css-loader' },
