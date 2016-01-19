@@ -12,10 +12,6 @@ import {
 } from 'phosphide';
 
 import {
-  DelegateCommand
-} from 'phosphor-command';
-
-import {
   Container
 } from 'phosphor-di';
 
@@ -31,6 +27,11 @@ function resolve(container: Container): Promise<void> {
   });
 }
 
+function createHandler(): (args: any) => void {
+  return () => {
+    console.log('Red invoked.');
+  };
+}
 
 class RedHandler {
 
@@ -51,8 +52,7 @@ class RedHandler {
     widget.title.text = 'Red';
     this._shell.addToRightArea(widget, { rank: 30 });
 
-    let handler = () => { console.log('Red invoked.'); };
-    this._commandRegistry.add('demo:red', handler);
+    this._commandRegistry.add('demo:red', createHandler());
   }
 
   private _shell: IAppShell;
