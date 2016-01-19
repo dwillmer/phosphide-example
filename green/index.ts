@@ -12,10 +12,6 @@ import {
 } from 'phosphide';
 
 import {
-  DelegateCommand
-} from 'phosphor-command';
-
-import {
   Container
 } from 'phosphor-di';
 
@@ -51,15 +47,9 @@ class GreenHandler {
     widget.title.text = 'Green';
     this._shell.addToRightArea(widget, { rank: 40 });
 
-    let commands = [
-      {
-        id: 'demo:green',
-        command: new DelegateCommand(() => {
-          console.log('Green Command invoked');
-        })
-      }
-    ];
-    this._commandRegistry.add(commands);
+    this._commandRegistry.add('demo:green', () => {
+      console.log('Green invoked.');
+    });
   }
 
   private _shell: IAppShell;
