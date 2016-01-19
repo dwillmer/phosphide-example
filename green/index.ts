@@ -27,12 +27,6 @@ function resolve(container: Container): Promise<void> {
   });
 }
 
-function createHandler(): (args: any) => void {
-  return () => {
-    console.log('Green invoked.');
-  };
-}
-
 
 class GreenHandler {
 
@@ -53,7 +47,9 @@ class GreenHandler {
     widget.title.text = 'Green';
     this._shell.addToRightArea(widget, { rank: 40 });
 
-    this._commandRegistry.add('demo:green', createHandler());
+    this._commandRegistry.add('demo:green', () => {
+      console.log('Green invoked.');
+    });
   }
 
   private _shell: IAppShell;

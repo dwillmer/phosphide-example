@@ -27,12 +27,6 @@ function resolve(container: Container): Promise<void> {
   });
 }
 
-function createHandler(): (args: any) => void {
-  return () => {
-    console.log('Blue invoked.');
-  };
-}
-
 
 class BlueHandler {
 
@@ -47,12 +41,15 @@ class BlueHandler {
     this._commandRegistry = commands;
   }
 
-  run(): void {   let widget = new Widget();
+  run(): void {
+    let widget = new Widget();
     widget.addClass('blue-content');
     widget.title.text = 'Blue';
     this._shell.addToLeftArea(widget, { rank: 10 });
 
-    this._commandRegistry.add('demo:blue', createHandler());
+    this._commandRegistry.add('demo:blue', () => {
+      console.log('Blue invoked.');
+    });
   }
 
   private _shell: IAppShell;
