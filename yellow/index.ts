@@ -51,15 +51,8 @@ class YellowHandler {
     widget.title.text = 'Yellow';
     this._shell.addToLeftArea(widget, { rank: 20 });
 
-    let commands = [
-      {
-        id: 'demo:yellow',
-        command: new DelegateCommand(() => {
-          console.log('Yellow Command invoked');
-        })
-      }
-    ];
-    this._commandRegistry.add(commands);
+    let handler = () => { console.log('Yellow invoked.'); };
+    this._commandRegistry.add('demo:yellow', handler);
   }
 
   private _shell: IAppShell;

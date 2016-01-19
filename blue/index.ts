@@ -45,21 +45,13 @@ class BlueHandler {
     this._commandRegistry = commands;
   }
 
-  run(): void {
-    let widget = new Widget();
+  run(): void {   let widget = new Widget();
     widget.addClass('blue-content');
     widget.title.text = 'Blue';
     this._shell.addToLeftArea(widget, { rank: 10 });
 
-    let commands = [
-      {
-        id: 'demo:blue',
-        command: new DelegateCommand(() => {
-          console.log('Blue Command invoked');
-        })
-      }
-    ];
-    this._commandRegistry.add(commands);
+    let handler = () => { console.log('Blue invoked.'); }
+    this._commandRegistry.add('demo:blue', handler);
   }
 
   private _shell: IAppShell;

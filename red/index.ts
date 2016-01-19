@@ -51,15 +51,8 @@ class RedHandler {
     widget.title.text = 'Red';
     this._shell.addToRightArea(widget, { rank: 30 });
 
-    let commands = [
-      {
-        id: 'demo:red',
-        command: new DelegateCommand(() => {
-          console.log('Red Command invoked');
-        })
-      }
-    ];
-      this._commandRegistry.add(commands);
+    let handler = () => { console.log('Red invoked.'); };
+    this._commandRegistry.add('demo:red', handler);
   }
 
   private _shell: IAppShell;
