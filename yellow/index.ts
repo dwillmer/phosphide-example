@@ -8,8 +8,12 @@
 'use strict';
 
 import {
-  IAppShell, ICommandRegistry
+  IAppShell, ICommandRegistry, ICommandPalette, IShortcutManager
 } from 'phosphide';
+
+import {
+  SimpleCommand
+} from 'phosphor-command';
 
 import {
   Container
@@ -32,13 +36,15 @@ class YellowHandler {
 
   static requires = [IAppShell, ICommandRegistry];
 
-  static create(shell: IAppShell, commands: ICommandRegistry): YellowHandler {
-    return new YellowHandler(shell, commands);
+  static create(shell: IAppShell, commands: ICommandRegistry, palette: ICommandPalette, shortcuts: IShortcutManager): YellowHandler {
+    return new YellowHandler(shell, commands, palette, shortcuts);
   }
 
-  constructor(shell: IAppShell, commands: ICommandRegistry) {
+  constructor(shell: IAppShell, commands: ICommandRegistry, palette: ICommandPalette, shortcuts: IShortcutManager) {
     this._shell = shell;
     this._commandRegistry = commands;
+    this._palette = palette;
+    this._shortcuts = shortcuts;
   }
 
   run(): void {
@@ -47,11 +53,38 @@ class YellowHandler {
     widget.title.text = 'Yellow';
     this._shell.addToLeftArea(widget, { rank: 20 });
 
-    this._commandRegistry.add('demo:yellow', () => {
-      console.log('Yellow invoked.');
+    let id = 'demo:yellow';
+    let command = new SimpleCommand({
+      handler: (message: string) => { console.log(`COMMAND: ${message}`); }
     });
+    this._commandRegistry.add([{ id, command }]);
+
+    this._shortcuts.add([
+      {
+        sequence: ['Ctrl Y'],
+        selector: '*',
+        command: id,
+        args: 'Yellow invoked!'
+      }
+    ]);
+
+    this._palette.add([
+      {
+        text: 'All colors',
+        items: [
+          {
+            id: 'demo:yellow',
+            title: 'Yellow',
+            caption: 'Yellow is best!',
+            args: 'Yellow invoked!'
+          }
+        ]
+      }
+    ]);
   }
 
   private _shell: IAppShell;
   private _commandRegistry: ICommandRegistry;
+  private _palette: ICommandPalette;
+  private _shortcuts: IShortcutManager;
 }

@@ -8,8 +8,12 @@
 'use strict';
 
 import {
-  IAppShell, ICommandRegistry
+  IAppShell, ICommandRegistry, IShortcutManager, ICommandPalette
 } from 'phosphide';
+
+import {
+  SimpleCommand
+} from 'phosphor-command';
 
 import {
   Container
@@ -30,15 +34,17 @@ function resolve(container: Container): Promise<void> {
 
 class BlueHandler {
 
-  static requires = [IAppShell, ICommandRegistry];
+  static requires = [IAppShell, ICommandRegistry, ICommandPalette, IShortcutManager];
 
-  static create(shell: IAppShell, commands: ICommandRegistry): BlueHandler {
-    return new BlueHandler(shell, commands);
+  static create(shell: IAppShell, commands: ICommandRegistry, palette: ICommandPalette, shortcuts: IShortcutManager): BlueHandler {
+    return new BlueHandler(shell, commands, palette, shortcuts);
   }
 
-  constructor(shell: IAppShell, commands: ICommandRegistry) {
+  constructor(shell: IAppShell, commands: ICommandRegistry, palette: ICommandPalette, shortcuts: IShortcutManager) {
     this._shell = shell;
     this._commandRegistry = commands;
+    this._shortcuts = shortcuts;
+    this._palette = palette;
   }
 
   run(): void {
@@ -47,11 +53,39 @@ class BlueHandler {
     widget.title.text = 'Blue';
     this._shell.addToLeftArea(widget, { rank: 10 });
 
-    this._commandRegistry.add('demo:blue', () => {
-      console.log('Blue invoked.');
+    let id = 'demo:blue';
+    let command = new SimpleCommand({
+      handler: (message: string) => { console.log(`COMMAND: ${message}`); }
     });
+    this._commandRegistry.add([{ id, command }]);
+
+    this._shortcuts.add([
+      {
+        sequence: ['Ctrl B'],
+        selector: '*',
+        command: id,
+        args: 'Blue invoked!'
+      }
+    ]);
+
+    this._palette.add([
+      {
+        text: 'All colors',
+        items: [
+          {
+            id: 'demo:blue',
+            title: 'Blue',
+            caption: 'Blue is best!',
+            args: 'Blue invoked!'
+          }
+        ]
+      }
+    ]);
+
   }
 
   private _shell: IAppShell;
   private _commandRegistry: ICommandRegistry;
+  private _shortcuts: IShortcutManager;
+  private _palette: ICommandPalette;
 }

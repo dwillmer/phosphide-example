@@ -16,6 +16,7 @@ function main() {
     require('phosphide/lib/appshell/plugin'),
     require('phosphide/lib/commandregistry/plugin'),
     require('phosphide/lib/commandpalette/plugin'),
+    require('phosphide/lib/shortcutmanager/plugin'),
     require('red'),
     require('blue'),
     require('green'),

@@ -8,8 +8,12 @@
 'use strict';
 
 import {
-  IAppShell, ICommandRegistry
+  IAppShell, ICommandRegistry, ICommandPalette, IShortcutManager
 } from 'phosphide';
+
+import {
+  SimpleCommand
+} from 'phosphor-command';
 
 import {
   Container
@@ -30,15 +34,17 @@ function resolve(container: Container): Promise<void> {
 
 class GreenHandler {
 
-  static requires = [IAppShell, ICommandRegistry];
+  static requires = [IAppShell, ICommandRegistry, ICommandPalette, IShortcutManager];
 
-  static create(shell: IAppShell, commands: ICommandRegistry): GreenHandler {
-    return new GreenHandler(shell, commands);
+  static create(shell: IAppShell, commands: ICommandRegistry, palette: ICommandPalette, shortcuts: IShortcutManager): GreenHandler {
+    return new GreenHandler(shell, commands, palette, shortcuts);
   }
 
-  constructor(shell: IAppShell, commands: ICommandRegistry) {
+  constructor(shell: IAppShell, commands: ICommandRegistry, palette: ICommandPalette, shortcuts: IShortcutManager) {
     this._shell = shell;
     this._commandRegistry = commands;
+    this._palette = palette;
+    this._shortcuts = shortcuts;
   }
 
   run(): void {
@@ -47,11 +53,38 @@ class GreenHandler {
     widget.title.text = 'Green';
     this._shell.addToRightArea(widget, { rank: 40 });
 
-    this._commandRegistry.add('demo:green', () => {
-      console.log('Green invoked.');
+    let id = 'demo:green';
+    let command = new SimpleCommand({
+      handler: (message: string) => { console.log(`COMMAND: ${message}`); }
     });
+    this._commandRegistry.add([{ id, command }]);
+
+    this._shortcuts.add([
+      {
+        sequence: ['Ctrl G'],
+        selector: '*',
+        command: id,
+        args: 'Green invoked!'
+      }
+    ]);
+
+    this._palette.add([
+      {
+        text: 'All colors',
+        items: [
+          {
+            id: 'demo:green',
+            title: 'Green',
+            caption: 'Green is best!',
+            args: 'Green invoked!'
+          }
+        ]
+      }
+    ]);
   }
 
   private _shell: IAppShell;
   private _commandRegistry: ICommandRegistry;
+  private _palette: ICommandPalette;
+  private _shortcuts: IShortcutManager;
 }
