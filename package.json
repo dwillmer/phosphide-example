@@ -20,7 +20,7 @@
   },
   "scripts": {
     "clean": "rimraf blue/*.js && rimraf green/*.js && rimraf red/*.js && rimraf yellow/*.js && rimraf editor/*.js",
-    "build": "tsc --project red && tsc --project green && tsc --project yellow && tsc --project blue && tsc --project editor && webpack --config webpack.conf.js",
+    "build": "tsc --project red && tsc --project green && tsc --project yellow && tsc --project blue && tsc --project editor && tsc --project application && webpack --config webpack.conf.js",
     "postinstall": "npm dedupe",
     "serve": "http-server -c-1"
   },
