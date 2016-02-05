@@ -12,10 +12,6 @@ import {
 } from 'phosphide';
 
 import {
-  SimpleCommand
-} from 'phosphor-command';
-
-import {
   Container
 } from 'phosphor-di';
 
@@ -31,13 +27,8 @@ function resolve(container: Container): Promise<void> {
   });
 }
 
-function createCommand(n: number): SimpleCommand {
-  return new SimpleCommand({
-    handler: (message: string) => { console.log(`COMMAND: ${message}`); },
-    category: 'Red',
-    text: 'Red ' + n.toString(),
-    caption: 'Caption - red ' + n.toString()
-  });
+function createHandler(): (args: any) => void {
+  return (message: string) => { console.log(`COMMAND: ${message}`); };
 }
 
 
@@ -63,20 +54,56 @@ class RedHandler {
     this._shell.addToRightArea(widget, { rank: 30 });
 
     let registryItems = [
-      { id: 'red:show-0', command: createCommand(0) },
-      { id: 'red:show-1', command: createCommand(1) },
-      { id: 'red:show-2', command: createCommand(2) },
-      { id: 'red:show-3', command: createCommand(3) },
-      { id: 'red:show-4', command: createCommand(4) },
-      { id: 'red:show-5', command: createCommand(5) }
+      { id: 'red:show-0', handler: createHandler() },
+      { id: 'red:show-1', handler: createHandler() },
+      { id: 'red:show-2', handler: createHandler() },
+      { id: 'red:show-3', handler: createHandler() },
+      { id: 'red:show-4', handler: createHandler() },
+      { id: 'red:show-5', handler: createHandler() }
     ];
     let paletteItems = [
-      { id: 'red:show-0', args: 'Red is best!' },
-      { id: 'red:show-1', args: 'Red number one' },
-      { id: 'red:show-2', args: 'Red number two' },
-      { id: 'red:show-3', args: 'Red number three' },
-      { id: 'red:show-4', args: 'Red number four' },
-      { id: 'red:show-5', args: 'Red number five' }
+      {
+        id: 'red:show-0',
+        args: 'Red is best!',
+        text: 'Red 0',
+        caption: 'Red is best!',
+        category: 'All Colours'
+      },
+      {
+        id: 'red:show-1',
+        args: 'Red number one',
+        text: 'Red 1',
+        caption: 'Red number one',
+        category: 'Red'
+      },
+      {
+        id: 'red:show-2',
+        args: 'Red number two',
+        text: 'Red 2',
+        caption: 'Red number two',
+        category: 'Red'
+      },
+      {
+        id: 'red:show-3',
+        args: 'Red number three',
+        text: 'Red 3',
+        caption: 'Red number three',
+        category: 'Red'
+      },
+      {
+        id: 'red:show-4',
+        args: 'Red number four',
+        text: 'Red 4',
+        caption: 'Red number four',
+        category: 'Red'
+      },
+      {
+        id: 'red:show-5',
+        args: 'Red number five',
+        text: 'Red 5',
+        caption: 'Red number five',
+        category: 'Red'
+      }
     ];
     let shortcutItems = [
       {
@@ -90,7 +117,6 @@ class RedHandler {
     this._commandRegistry.add(registryItems);
     this._shortcuts.add(shortcutItems);
     this._palette.add(paletteItems);
-
   }
 
   private _shell: IAppShell;

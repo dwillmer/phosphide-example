@@ -5,8 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "codemirror": "^5.9.0",
-    "phosphide": "^0.3.0",
-    "phosphor-command": "^0.6.0",
+    "phosphide": "file:../phosphide",
+    "phosphor-commandpalette": "file:../phosphor-commandpalette",
     "phosphor-di": "^0.9.0",
     "phosphor-messaging": "^1.0.6",
     "phosphor-widget": "^1.0.0-rc.0"

@@ -12,10 +12,6 @@ import {
 } from 'phosphide';
 
 import {
-  SimpleCommand
-} from 'phosphor-command';
-
-import {
   Container
 } from 'phosphor-di';
 
@@ -31,13 +27,8 @@ function resolve(container: Container): Promise<void> {
   });
 }
 
-function createCommand(n: number): SimpleCommand {
-  return new SimpleCommand({
-    handler: (message: string) => { console.log(`COMMAND: ${message}`)},
-    category: 'Green',
-    text: 'Green ' + n.toString(),
-    caption: 'Caption - green ' + n.toString()
-  });
+function createHandler(): (args: any) => void {
+  return (message: string) => { console.log(`COMMAND: ${message}`)};
 }
 
 
@@ -63,20 +54,56 @@ class GreenHandler {
     this._shell.addToRightArea(widget, { rank: 40 });
 
     let registryItems = [
-      { id: 'green:show-0', command: createCommand(0) },
-      { id: 'green:show-1', command: createCommand(1) },
-      { id: 'green:show-2', command: createCommand(2) },
-      { id: 'green:show-3', command: createCommand(3) },
-      { id: 'green:show-4', command: createCommand(4) },
-      { id: 'green:show-5', command: createCommand(5) }
+      { id: 'green:show-0', handler: createHandler() },
+      { id: 'green:show-1', handler: createHandler() },
+      { id: 'green:show-2', handler: createHandler() },
+      { id: 'green:show-3', handler: createHandler() },
+      { id: 'green:show-4', handler: createHandler() },
+      { id: 'green:show-5', handler: createHandler() }
     ];
     let paletteItems = [
-      { id: 'green:show-0', args: 'Green is best!' },
-      { id: 'green:show-1', args: 'Green number one' },
-      { id: 'green:show-2', args: 'Green number two' },
-      { id: 'green:show-3', args: 'Green number three' },
-      { id: 'green:show-4', args: 'Green number four' },
-      { id: 'green:show-5', args: 'Green number five' }
+      {
+        id: 'green:show-0',
+        args: 'Green is best!',
+        text: 'Green 0',
+        caption: 'Green is best!',
+        category: 'Green'
+      },
+      {
+        id: 'green:show-1',
+        args: 'Green number one',
+        text: 'Green 1',
+        caption: 'Green number one',
+        category: 'Green'
+      },
+      {
+        id: 'green:show-2',
+        args: 'Green number two',
+        text: 'Green 2',
+        caption: 'Green number two',
+        category: 'Green'
+      },
+      {
+        id: 'green:show-3',
+        args: 'Green number three',
+        text: 'Green 3',
+        caption: 'Green number three',
+        category: 'Green'
+      },
+      {
+        id: 'green:show-4',
+        args: 'Green number four',
+        text: 'Green 4',
+        caption: 'Green number four',
+        category: 'Green'
+      },
+      {
+        id: 'green:show-5',
+        args: 'Green number five',
+        text: 'Green 5',
+        caption: 'Green number 5',
+        category: 'Green'
+      }
     ];
     let shortcutItems = [
       {

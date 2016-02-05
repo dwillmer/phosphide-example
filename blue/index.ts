@@ -12,10 +12,6 @@ import {
 } from 'phosphide';
 
 import {
-  SimpleCommand
-} from 'phosphor-command';
-
-import {
   Container
 } from 'phosphor-di';
 
@@ -31,13 +27,8 @@ function resolve(container: Container): Promise<void> {
   });
 }
 
-function createCommand(n: number): SimpleCommand {
-  return new SimpleCommand({
-    handler: (message: string) => { console.log(`COMMAND: ${message}`); },
-    category: 'Blue',
-    text: 'Blue ' + n.toString(),
-    caption: 'Caption - blue ' + n.toString()
-  });
+function createHandler(): (args: any) => void {
+  return (message: string) => { console.log(`COMMAND: ${message}`); };
 }
 
 class BlueHandler {
@@ -62,20 +53,56 @@ class BlueHandler {
     this._shell.addToLeftArea(widget, { rank: 10 });
 
     let registryItems = [
-      { id: 'blue:show-0', command: createCommand(0) },
-      { id: 'blue:show-1', command: createCommand(1) },
-      { id: 'blue:show-2', command: createCommand(2) },
-      { id: 'blue:show-3', command: createCommand(3) },
-      { id: 'blue:show-4', command: createCommand(4) },
-      { id: 'blue:show-5', command: createCommand(5) },
+      { id: 'blue:show-0', handler: createHandler() },
+      { id: 'blue:show-1', handler: createHandler() },
+      { id: 'blue:show-2', handler: createHandler() },
+      { id: 'blue:show-3', handler: createHandler() },
+      { id: 'blue:show-4', handler: createHandler() },
+      { id: 'blue:show-5', handler: createHandler() },
     ];
     let paletteItems = [
-      { id: 'blue:show-0', args: 'Blue is best!' },
-      { id: 'blue:show-1', args: 'Blue number one' },
-      { id: 'blue:show-2', args: 'Blue number two' },
-      { id: 'blue:show-3', args: 'Blue number three' },
-      { id: 'blue:show-4', args: 'Blue number four' },
-      { id: 'blue:show-5', args: 'Blue number five' }
+      {
+        id: 'blue:show-0',
+        args: 'Blue is best!',
+        text: 'Blue 0',
+        caption: 'Blue is best!',
+        category: 'All Colours'
+      },
+      {
+        id: 'blue:show-1',
+        args: 'Blue number one',
+        text: 'Blue 1',
+        caption: 'Blue number one',
+        category: 'Blue'
+      },
+      {
+        id: 'blue:show-2',
+        args: 'Blue number two',
+        text: 'Blue 2',
+        caption: 'Blue number two',
+        category: 'Blue'
+       },
+      {
+        id: 'blue:show-3',
+        args: 'Blue number three',
+        text: 'Blue 3',
+        caption: 'Blue number three',
+        category: 'Blue'
+      },
+      {
+        id: 'blue:show-4',
+        args: 'Blue number four',
+        text: 'Blue 4',
+        caption: 'Blue number four',
+        category: 'Blue'
+      },
+      {
+        id: 'blue:show-5',
+        args: 'Blue number five',
+        text: 'Blue 5',
+        caption: 'Blue number 5',
+        category: 'Blue'
+      }
     ];
     let shortcutItems = [
       {
