@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------
-| Copyright (c) 2014-2015, PhosphorJS Contributors
+| Copyright (c) 2014-2016, PhosphorJS Contributors
 |
 | Distributed under the terms of the BSD 3-Clause License.
 |
@@ -93,13 +93,13 @@ body {
 
 #p-left-stack {
   padding: 5px;
-  background: white;
+  background: #EEEEEE;
 }
 
 
 #p-right-stack {
   padding: 5px;
-  background: white;
+  background: #EEEEEE;
 }
 
 
@@ -267,4 +267,83 @@ body {
   border: 1px solid #C0C0C0;
   min-width: 100px;
   min-height: 100px;
+}
+
+
+.p-CommandPalette {
+  background: #F5F5F5;
+  border: 1px solid #CCCCCC;
+  font-family: Helvetica, Arial, sans-serif;
+  min-width: 250px;
+}
+
+
+.p-CommandPalette-search {
+  padding: 8px;
+}
+
+
+.p-CommandPalette-inputWrapper {
+  border: 1px solid #E0E0E0;
+  background: white;
+  padding: 4px 6px;
+}
+
+
+.p-CommandPalette-input {
+  width: 100%;
+  outline: none;
+  border: none;
+  font-size: 16px;
+}
+
+
+.p-CommandPalette-header {
+  color: #757575;
+  padding: 8px 0px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #E1E1E1;
+  cursor: pointer;
+}
+
+
+.p-CommandPalette-headerText {
+  margin-left: 4px;
+}
+
+
+.p-CommandPalette-item {
+  color: #757575;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 4px 8px;
+}
+
+.p-CommandPalette-header.p-mod-active,
+.p-CommandPalette-item.p-mod-active {
+  background: #7FDBFF;
+}
+
+
+.p-CommandPalette-item:hover:not(.p-mod-active) {
+  background: #EBEBEB;
+}
+
+
+.p-CommandPalette-itemText > em {
+  font-style: normal;
+  font-weight: bold;
+  color: #303030;
+}
+
+
+.p-CommandPalette-itemCaption {
+  color: #9E9E9E;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.p-CommandPalette-itemShortcut {
+  float: right;
 }
